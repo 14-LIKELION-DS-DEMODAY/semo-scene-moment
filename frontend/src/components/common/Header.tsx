@@ -5,7 +5,7 @@ import backImg from '../../assets/icons/icon-back.svg';
 
 /**
  * 상단 헤더 (시안 기준 2가지)
- * - logo : 홈 / 참여 중인 세모 / 마이페이지  → 좌측 세모 로고만
+ * - logo : 홈 / 참여 중인 세모 / 마이페이지  → 좌측 세모 로고만 (상단 20px 여백, 40x40px)
  * - back : 세모 만들기 / 친구 초대하기 / 참여하기 / 사진 업로드 / 세모 보기
  *          → `<` 뒤로가기 + 타이틀 + (선택) 우측 액션
  */
@@ -27,20 +27,24 @@ export default function Header({ variant, title, onBack, rightElement }: HeaderP
     else navigate(-1);
   };
 
+  // 로고 헤더
+  if (variant === 'logo') {
+    return (
+      <header className="flex shrink-0 items-center px-6 pt-[20px]">
+        <img src={logoImg} alt="세모" className="h-10 w-10" />
+      </header>
+    );
+  }
+
+  // 뒤로가기 헤더
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between px-5">
-      {variant === 'logo' ? (
-        // 타입 A: 로고 헤더
-        <img src={logoImg} alt="세모" className="h-6 w-auto" />
-      ) : (
-        // 타입 B: 뒤로가기 헤더
-        <div className="flex items-center gap-2">
-          <button type="button" onClick={handleBack} aria-label="뒤로가기" className="-ml-1 p-1">
-            <img src={backImg} alt="" className="h-4 w-4" />
-          </button>
-          {title && <h1 className="text-sm font-semibold text-gray-900">{title}</h1>}
-        </div>
-      )}
+    <header className="flex shrink-0 items-center justify-between px-6 pt-[60px]">
+      <div className="flex items-center gap-2">
+        <button type="button" onClick={handleBack} aria-label="뒤로가기" className="-ml-1 p-1">
+          <img src={backImg} alt="" className="h-4 w-4" />
+        </button>
+        {title && <h1 className="text-[18px] font-semibold text-gray-900">{title}</h1>}
+      </div>
 
       {/* 우측 선택 요소 (닫기 등). 없으면 비워둠 */}
       <div className="text-xs text-primary">{rightElement}</div>
