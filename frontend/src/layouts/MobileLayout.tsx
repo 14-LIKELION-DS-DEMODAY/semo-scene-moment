@@ -3,7 +3,7 @@ import BottomNav from '../components/common/BottomNav';
 
 /**
  * 모바일 뷰포트 레이아웃
- * - 웹 브라우저에서도 모바일 화면처럼 최대 430px로 고정, 가운데 정렬
+ * - 웹 브라우저에서도 모바일 화면처럼 최대 402px로 고정, 가운데 정렬
  * - 하단 탭바 표시 여부(hasBottomNav)와 종류(bottomNavType)를 제어
  *
  * 사용 예)
@@ -28,7 +28,7 @@ export default function MobileLayout({
   semoId,
 }: MobileLayoutProps) {
   return (
-    <div className="mx-auto flex min-h-screen max-w-[430px] flex-col bg-white shadow-sm">
+    <div className="mx-auto flex min-h-screen w-full max-w-[402px] flex-col bg-white shadow-sm">
       {/* 페이지 본문: 남는 공간을 모두 차지해서 탭바가 항상 아래에 붙음 */}
       <main className="flex flex-1 flex-col">{children}</main>
 
