@@ -12,7 +12,6 @@ type ButtonVariant = 'primary' | 'secondary';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
-  /** 가로 100% 사용 여부 (시안 대부분이 꽉 찬 버튼이라 기본값 true) */
   fullWidth?: boolean;
   children: ReactNode;
 }
@@ -23,7 +22,7 @@ const VARIANT_STYLES: Record<ButtonVariant, string> = {
   secondary: 'bg-white text-primary border border-primary-border active:bg-primary-disabled',
 };
 
-// 비활성 상태 스타일 (variant 공통)
+// 비활성 상태 스타일
 const DISABLED_STYLE = 'bg-primary-disabled text-primary/40 cursor-not-allowed';
 
 export default function Button({
@@ -36,7 +35,7 @@ export default function Button({
   ...rest
 }: ButtonProps) {
   const base =
-    'h-12 px-4 rounded-2xl text-sm font-semibold transition-colors flex items-center justify-center gap-1';
+    'h-[55px] px-4 rounded-2xl text-sm font-semibold transition-colors flex items-center justify-center gap-1';
   const width = fullWidth ? 'w-full' : '';
   const style = disabled ? DISABLED_STYLE : VARIANT_STYLES[variant];
 

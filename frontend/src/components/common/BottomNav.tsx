@@ -29,7 +29,6 @@ interface TabItem {
   to: string;
   icon: string;
   iconActive: string;
-  /** true면 정확히 일치할 때만 활성화 (홈 '/home'이 하위 경로에서 켜지는 것 방지) */
   end?: boolean;
 }
 
@@ -80,28 +79,38 @@ export default function BottomNav({ type, semoId }: BottomNavProps) {
   const tabs = type === "main" ? MAIN_TABS : getSemoTabs(semoId as string);
 
   return (
-    <nav className="sticky bottom-0 z-10 flex h-16 shrink-0 items-center border-t border-gray-100 bg-white">
+    <nav
+      className={`sticky bottom-0 z-10 flex h-[89px] shrink-0 items-center border-t border-[#C9DFEA] bg-white py-[20px] ${
+        type === 'main' ? 'justify-center gap-[100px] px-[57px]' : 'justify-around px-6'
+      }`}
+    >
       {tabs.map((tab) => (
         <NavLink
           key={tab.to}
           to={tab.to}
           end={tab.end}
-          className="flex flex-1 flex-col items-center justify-center gap-1"
+          className="flex shrink-0 flex-col items-center justify-center gap-1"
         >
-          {({ isActive }) => (
-            <>
-              <img
-                src={isActive ? tab.iconActive : tab.icon}
-                alt=""
-                className="h-5 w-5"
-              />
-              <span
-                className={`text-[10px] ${isActive ? "font-semibold text-primary" : "text-gray-400"}`}
-              >
-                {tab.label}
-              </span>
-            </>
-          )}
+          {({ isActive }) => {
+            const highlighted = type === 'semo' || isActive;
+
+            return (
+              <>
+                <img
+                  src={isActive ? tab.iconActive : tab.icon}
+                  alt=""
+                  className="h-6 w-6"
+                />
+                <span
+                  className={`text-[11px] ${
+                    highlighted ? 'font-semibold text-[#346E90]' : 'text-gray-400'
+                  }`}
+                >
+                  {tab.label}
+                </span>
+              </>
+            );
+          }}
         </NavLink>
       ))}
     </nav>
