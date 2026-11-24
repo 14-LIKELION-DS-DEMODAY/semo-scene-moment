@@ -8,7 +8,7 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react';
  *
  * 색상은 index.css의 @theme 토큰(primary / primary-border / primary-disabled)을 사용합니다.
  */
-type ButtonVariant = 'primary' | 'secondary';
+type ButtonVariant = 'primary' | 'secondary' | 'warning';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -20,10 +20,12 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const VARIANT_STYLES: Record<ButtonVariant, string> = {
   primary: 'bg-primary text-white active:brightness-95',
   secondary: 'bg-white text-primary border border-primary-border active:bg-primary-disabled',
+  warning: 'bg-warning-bg text-warning-text active:brightness-95',
 };
 
 // 비활성 상태 스타일
 const DISABLED_STYLE = 'bg-primary-disabled text-primary/40 cursor-not-allowed';
+const WARNING_DISABLED_STYLE = 'bg-warning-bg text-warning-disabled cursor-not-allowed';
 
 export default function Button({
   variant = 'primary',
@@ -37,7 +39,8 @@ export default function Button({
   const base =
     'h-[55px] px-4 rounded-2xl text-sm font-semibold transition-colors flex items-center justify-center gap-1';
   const width = fullWidth ? 'w-full' : '';
-  const style = disabled ? DISABLED_STYLE : VARIANT_STYLES[variant];
+  const disabledStyle = variant === 'warning' ? WARNING_DISABLED_STYLE : DISABLED_STYLE;
+  const style = disabled ? disabledStyle : VARIANT_STYLES[variant];
 
   return (
     <button
