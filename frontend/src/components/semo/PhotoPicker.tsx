@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import plusImg from '../../assets/icons/photo-plus.svg'
 
 interface PhotoPickerProps {
   label: string
@@ -10,19 +11,17 @@ export default function PhotoPicker({ label, previewUrl, onChange }: PhotoPicker
   const ref = useRef<HTMLInputElement>(null)
   return (
     <div>
-      <p className="mb-3 text-[14px] text-gray-900">{label}</p>
+      <p className="mb-[9px] text-[13px] font-medium leading-4 text-black">{label}</p>
       <button
         type="button"
         aria-label="대표 사진 선택"
         onClick={() => ref.current?.click()}
-        className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-xl border border-primary-border bg-primary-disabled/50"
+        className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-[10px] border border-line bg-surface"
       >
         {previewUrl ? (
           <img src={previewUrl} alt="대표 사진" className="h-full w-full object-cover" />
         ) : (
-          <svg width="26" height="26" viewBox="0 0 26 26" stroke="#447F9F" strokeWidth="1.6">
-            <path d="M13 1v24M1 13h24" />
-          </svg>
+          <img src={plusImg} alt="" className="h-8 w-8" />
         )}
       </button>
       <input
