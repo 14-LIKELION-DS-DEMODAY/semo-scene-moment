@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createSemo } from '../../api/semo'
 import Button from '../../components/common/Button'
 import Header from '../../components/common/Header'
@@ -17,17 +17,16 @@ export default function SemoCreatePage() {
   const [name, setName] = useState('')
   const [nickname, setNickname] = useState(readNickname)
   const [photo, setPhoto] = useState<File | null>(null)
-  const [preview, setPreview] = useState<string | null>(null)
   const [touched, setTouched] = useState({ name: false, nickname: false })
   const [created, setCreated] = useState<SemoItem | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
+  const preview = useMemo(() => (photo ? URL.createObjectURL(photo) : null), [photo])
+
   useEffect(() => {
-    if (!photo) return
-    const url = URL.createObjectURL(photo)
-    setPreview(url)
-    return () => URL.revokeObjectURL(url)
-  }, [photo])
+    if (!preview) return
+    return () => URL.revokeObjectURL(preview)
+  }, [preview])
 
   if (created) return <SemoCreated semo={created} />
 
