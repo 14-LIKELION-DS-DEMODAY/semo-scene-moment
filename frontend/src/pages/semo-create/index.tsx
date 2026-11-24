@@ -5,7 +5,7 @@ import Header from '../../components/common/Header'
 import Input from '../../components/common/Input'
 import PhotoPicker from '../../components/semo/PhotoPicker'
 import MobileLayout from '../../layouts/MobileLayout'
-import type { Semo } from '../../types/semo'
+import type { SemoItem } from '../../types/semo'
 import SemoCreated from './SemoCreated'
 
 const NICKNAME_KEY = 'semo:nickname'
@@ -24,7 +24,7 @@ export default function SemoCreatePage() {
   const [photo, setPhoto] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [touched, setTouched] = useState({ name: false, nickname: false })
-  const [created, setCreated] = useState<Semo | null>(null)
+  const [created, setCreated] = useState<SemoItem | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
@@ -60,35 +60,39 @@ export default function SemoCreatePage() {
 
   return (
     <MobileLayout>
-      <Header title="세모 만들기" />
-      <main className="flex flex-1 flex-col px-6">
-        <h2 className="mt-[56px] text-[25px] font-extrabold leading-tight text-ink">
+      <Header variant="back" title="세모 만들기" />
+      <div className="flex flex-1 flex-col px-6">
+        <h2 className="mt-[56px] text-[25px] font-extrabold leading-tight text-gray-900">
           어떤 순간을 함께 모아볼까요?
         </h2>
-        <p className="mt-4 text-[15px] text-ink">친구들과의 여행, 모임, 평범했던 하루까지.</p>
+        <p className="mt-4 text-[15px] text-gray-900">친구들과의 여행, 모임, 평범했던 하루까지.</p>
 
-        <Input
-          className="mt-[72px]"
-          label="세모 이름"
-          required
-          placeholder="예: 우리의 부산 여행"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onBlur={() => setTouched((t) => ({ ...t, name: true }))}
-          error={touched.name && name.trim() === '' ? '세모 이름을 입력해주세요.' : undefined}
-        />
-        <Input
-          className="mt-10"
-          label="내 닉네임"
-          required
-          placeholder="예: 여진"
-          value={nickname}
-          onChange={(e) => setNickname(e.target.value)}
-          onBlur={() => setTouched((t) => ({ ...t, nickname: true }))}
-          error={
-            touched.nickname && nickname.trim() === '' ? '사용할 닉네임을 입력해주세요.' : undefined
-          }
-        />
+        <div className="mt-[72px]">
+          <Input
+            label="세모 이름"
+            required
+            placeholder="예: 우리의 부산 여행"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onBlur={() => setTouched((t) => ({ ...t, name: true }))}
+            error={touched.name && name.trim() === '' ? '세모 이름을 입력해주세요.' : undefined}
+          />
+        </div>
+        <div className="mt-10">
+          <Input
+            label="내 닉네임"
+            required
+            placeholder="예: 여진"
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            onBlur={() => setTouched((t) => ({ ...t, nickname: true }))}
+            error={
+              touched.nickname && nickname.trim() === ''
+                ? '사용할 닉네임을 입력해주세요.'
+                : undefined
+            }
+          />
+        </div>
         <div className="mt-10">
           <PhotoPicker label="대표 사진" previewUrl={preview} onChange={setPhoto} />
         </div>
@@ -98,7 +102,7 @@ export default function SemoCreatePage() {
             세모 만들기
           </Button>
         </div>
-      </main>
+      </div>
     </MobileLayout>
   )
 }
