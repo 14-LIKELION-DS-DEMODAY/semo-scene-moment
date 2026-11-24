@@ -18,3 +18,11 @@ export interface SemoItem {
   /** 정렬용: 마지막 활동 시각 (ISO 문자열) */
   lastActivityAt: string;
 }
+
+
+/** 세모 생성 요청 */
+export interface CreateSemoRequest {
+  name: string;
+  nickname: string;
+  coverImage?: File | null;
+}

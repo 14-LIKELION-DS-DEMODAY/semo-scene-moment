@@ -4,6 +4,7 @@ import HomeEmptyView from './HomeEmptyView';
 import HomeContentView from './HomeContentView';
 import { MOCK_SEMOS } from '../../api/mockSemos';
 import type { SemoItem } from '../../types/semo';
+import { NICKNAME_KEY } from '../../utils/storage';
 
 /**
  * 홈 페이지 (/home)
@@ -15,7 +16,7 @@ export default function HomePage() {
   const semoList: SemoItem[] = MOCK_SEMOS;
 
   // TODO: 닉네임 저장 방식 확정 후 교체 (현재는 로컬스토리지)
-  const nickname = localStorage.getItem('nickname') ?? '여진';
+  const nickname = localStorage.getItem(NICKNAME_KEY) ?? '여진';
 
   return (
     <MobileLayout hasBottomNav bottomNavType="main">

@@ -4,6 +4,8 @@ import HomePage from "./pages/home/HomePage";
 import SemoListPage from "./pages/home/SemoListPage";
 import MyPage from "./pages/my/MyPage";
 import SemoDetailPage from "./pages/semo-detail/SemoDetailPage";
+import SemoCreatePage from "./pages/semo-create";
+import InvitePage from "./pages/invite";
 
 export default function App() {
   return (
@@ -16,6 +18,7 @@ export default function App() {
         <Route path="/semo" element={<SemoListPage />} />
 
         {/* 세모 생성 */}
+        <Route path="/semo/create" element={<SemoCreatePage />} />
 
         {/* 세모 상세 */}
         <Route path="/semo/:semoId" element={<SemoDetailPage />} />
@@ -24,6 +27,7 @@ export default function App() {
         <Route path="/my" element={<MyPage />} />
 
         {/* 친구 초대 / 참여 / 사진 업로드*/}
+        <Route path="/invite/:semoId" element={<InvitePage />} />
 
         {/* 없는 경로는 시작 화면으로 */}
         <Route path="*" element={<Navigate to="/" replace />} />
