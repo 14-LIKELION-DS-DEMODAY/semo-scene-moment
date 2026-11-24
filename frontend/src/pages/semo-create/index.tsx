@@ -3,30 +3,15 @@ import { createSemo } from '../../api/semo'
 import Button from '../../components/common/Button'
 import Header from '../../components/common/Header'
 import Input from '../../components/common/Input'
+import CharCounter from '../../components/semo/CharCounter'
 import PhotoPicker from '../../components/semo/PhotoPicker'
 import MobileLayout from '../../layouts/MobileLayout'
 import type { SemoItem } from '../../types/semo'
-import { NICKNAME_KEY } from '../../utils/storage'
+import { readNickname, saveNickname } from '../../utils/storage'
 import SemoCreated from './SemoCreated'
 
 const NAME_MAX = 30
 const NICKNAME_MAX = 10
-
-function Counter({ length, max }: { length: number; max: number }) {
-  return (
-    <p className="mt-2 h-4 text-right text-[11px] leading-4 text-placeholder">
-      {length}/{max}
-    </p>
-  )
-}
-
-function readNickname() {
-  try {
-    return localStorage.getItem(NICKNAME_KEY) ?? ''
-  } catch {
-    return ''
-  }
-}
 
 export default function SemoCreatePage() {
   const [name, setName] = useState('')
@@ -60,11 +45,7 @@ export default function SemoCreatePage() {
         nickname: nickname.trim(),
         coverImage: photo,
       })
-      try {
-        localStorage.setItem(NICKNAME_KEY, nickname.trim())
-      } catch {
-        // localStorage 사용 불가 시 무시
-      }
+      saveNickname(nickname.trim())
       setCreated(semo)
     } finally {
       setSubmitting(false)
@@ -93,7 +74,7 @@ export default function SemoCreatePage() {
             onBlur={() => setTouched((t) => ({ ...t, name: true }))}
             error={nameError}
           />
-          {!nameError && <Counter length={name.length} max={NAME_MAX} />}
+          {!nameError && <CharCounter length={name.length} max={NAME_MAX} />}
         </div>
         <div className="mt-[41px]">
           <Input
@@ -106,7 +87,7 @@ export default function SemoCreatePage() {
             onBlur={() => setTouched((t) => ({ ...t, nickname: true }))}
             error={nicknameError}
           />
-          {!nicknameError && <Counter length={nickname.length} max={NICKNAME_MAX} />}
+          {!nicknameError && <CharCounter length={nickname.length} max={NICKNAME_MAX} />}
         </div>
         <div className="mt-[41px]">
           <PhotoPicker label="대표 사진" previewUrl={preview} onChange={setPhoto} />

@@ -6,6 +6,8 @@ import MyPage from "./pages/my/MyPage";
 import SemoDetailPage from "./pages/semo-detail/SemoDetailPage";
 import SemoCreatePage from "./pages/semo-create";
 import InvitePage from "./pages/invite";
+import JoinPage from "./pages/join";
+import JoinCodePage from "./pages/join/JoinCodePage";
 
 export default function App() {
   return (
@@ -28,6 +30,8 @@ export default function App() {
 
         {/* 친구 초대 / 참여 / 사진 업로드*/}
         <Route path="/invite/:semoId" element={<InvitePage />} />
+        <Route path="/join" element={<JoinCodePage />} />
+        <Route path="/join/:code" element={<JoinPage />} />
 
         {/* 없는 경로는 시작 화면으로 */}
         <Route path="*" element={<Navigate to="/" replace />} />

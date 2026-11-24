@@ -1,4 +1,5 @@
 import type { CreateSemoRequest, SemoItem } from '../types/semo';
+import { MOCK_PARTICIPANTS } from './mockParticipants';
 import { MOCK_SEMOS } from './mockSemos';
 
 // TODO: 실제 API 연동 시 교체. 현재는 목데이터로 응답하고, 상세 화면에서 보이도록 MOCK_SEMOS에 추가한다.
@@ -17,5 +18,16 @@ export async function createSemo(req: CreateSemoRequest): Promise<SemoItem> {
     lastActivityAt: now.toISOString(),
   };
   MOCK_SEMOS.unshift(semo);
+  MOCK_PARTICIPANTS[semo.id] = [{ id: 'me', nickname: req.nickname }];
   return semo;
+}
+
+export async function getSemo(semoId: string): Promise<SemoItem | null> {
+  await new Promise((resolve) => setTimeout(resolve, 200));
+  return MOCK_SEMOS.find((s) => s.id === semoId) ?? null;
+}
+
+// 임시: 초대 코드 = 세모 id (getInviteLink와 같이 교체)
+export async function getSemoByCode(code: string): Promise<SemoItem | null> {
+  return getSemo(code);
 }
