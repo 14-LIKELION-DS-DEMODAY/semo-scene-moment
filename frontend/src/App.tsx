@@ -8,6 +8,8 @@ import SemoCreatePage from "./pages/semo-create";
 import InvitePage from "./pages/invite";
 import JoinPage from "./pages/join";
 import JoinCodePage from "./pages/join/JoinCodePage";
+import UploadPage from "./pages/upload";
+import AnalysisPage from "./pages/matching/AnalysisPage";
 
 export default function App() {
   return (
@@ -30,6 +32,8 @@ export default function App() {
 
         {/* 친구 초대 / 참여 / 사진 업로드*/}
         <Route path="/invite/:semoId" element={<InvitePage />} />
+        <Route path="/upload/:semoId" element={<UploadPage />} />
+        <Route path="/semo/:semoId/analysis" element={<AnalysisPage />} />
         <Route path="/join" element={<JoinCodePage />} />
         <Route path="/join/:code" element={<JoinPage />} />
 
