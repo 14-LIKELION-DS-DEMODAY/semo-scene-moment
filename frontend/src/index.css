@@ -12,4 +12,9 @@
   --color-primary-ink: #244c62;
   --color-primary-text: #3b7797;
   --color-muted: #acacac;
+  --color-warning-bg: #fbf1ea;
+  --color-warning-text: #8c654a;
+  --color-warning-disabled: #debba3;
+  --color-subtle: #728b9b;
+  --color-skeleton: #d9d9d9;
 }
