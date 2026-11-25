@@ -1,0 +1,10 @@
+spring:
+  profiles:
+    active: local
+  jpa:
+    open-in-view: false
+
+app:
+  cors:
+    allowed-origins: http://localhost:5173,http://localhost:3000
+  frontend-url: http://localhost:5173
