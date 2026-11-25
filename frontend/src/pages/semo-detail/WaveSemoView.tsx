@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import MomentWaveChart from '../../components/semo/MomentWaveChart';
 import { formatKoreanDate } from '../../utils/wave';
+import { momentPath } from '../../utils/routes';
 import type { Moment } from '../../types/moment';
 import chevronRightIcon from '../../assets/icons/icon-chevron-right.svg';
 
@@ -10,10 +12,12 @@ import chevronRightIcon from '../../assets/icons/icon-chevron-right.svg';
  * - 상태는 2개: selectedDate, selectedMomentId
  */
 interface WaveSemoViewProps {
+  semoId: string;
   moments: Moment[];
 }
 
-export default function WaveSemoView({ moments }: WaveSemoViewProps) {
+export default function WaveSemoView({ semoId, moments }: WaveSemoViewProps) {
+  const navigate = useNavigate();
   // 날짜 목록 (중복 제거, 등장 순서 유지)
   const dates = Array.from(new Set(moments.map((m) => m.date)));
 
@@ -66,8 +70,7 @@ export default function WaveSemoView({ moments }: WaveSemoViewProps) {
         <h3 className="text-[16px] font-bold leading-[1.2] text-black">선택한 순간</h3>
         <button
           type="button"
-          // TODO: 순간 상세(사진 목록) 라우트 확정 후 연결
-          onClick={() => {}}
+          onClick={() => navigate(momentPath(semoId, selectedMoment.id))}
           className="flex h-[83px] w-full items-center justify-between rounded-[14px] border border-[#DFE9EE] bg-white py-[7px] pl-[7px] pr-[9px] text-left"
         >
           <div className="flex items-center gap-[15px]">

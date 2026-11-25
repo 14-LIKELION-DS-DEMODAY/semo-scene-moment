@@ -12,6 +12,8 @@ import UploadPage from "./pages/upload";
 import AnalysisPage from "./pages/matching/AnalysisPage";
 import ResultPage from "./pages/matching/ResultPage";
 import ManualPage from "./pages/matching/ManualPage";
+import MomentDetailPage from "./pages/moment/MomentDetailPage";
+import PhotoPage from "./pages/photo/PhotoPage";
 
 export default function App() {
   return (
@@ -28,6 +30,10 @@ export default function App() {
 
         {/* 세모 상세 */}
         <Route path="/semo/:semoId" element={<SemoDetailPage />} />
+
+        {/* Moment 상세 / 사진 보기 */}
+        <Route path="/semo/:semoId/moments/:momentId" element={<MomentDetailPage />} />
+        <Route path="/semo/:semoId/moments/:momentId/photos/:photoId" element={<PhotoPage />} />
 
         {/* 마이페이지 */}
         <Route path="/my" element={<MyPage />} />
