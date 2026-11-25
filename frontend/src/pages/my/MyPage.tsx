@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import MobileLayout from '../../layouts/MobileLayout';
 import Header from '../../components/common/Header';
 import { MOCK_SEMOS } from '../../api/mockSemos';
@@ -12,7 +14,7 @@ import chevronRightIcon from '../../assets/icons/icon-chevron-right.svg';
 
 /* 섹션 제목 */
 function SectionTitle({ children }: { children: string }) {
-  return <h3 className="mb-3 text-[20px] font-semibold text-black">{children}</h3>;
+  return <h3 className="mb-2 text-[20px] font-bold leading-[1.2] text-black">{children}</h3>;
 }
 
 /* 메뉴 한 줄 */
@@ -29,7 +31,7 @@ function MenuItem({
     <button
       type="button"
       onClick={onClick}
-      className="flex h-[46px] w-full items-center justify-between rounded-[12px] border border-[#DFE9EE] bg-white px-4 text-left text-[14px] text-black"
+      className="flex h-[43px] w-full items-center justify-between rounded-[12px] border border-[#DFE9EE] bg-white px-3 text-left text-[14px] font-medium leading-[1.2] text-black"
     >
       <span>{label}</span>
       {showArrow && (
@@ -45,6 +47,7 @@ function MenuItem({
 
 export default function MyPage() {
   const navigate = useNavigate();
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   // TODO: 백엔드 연동 시 API 응답으로 교체 (HomePage와 같은 기준으로 신규 여부 판단)
   const isNewUser = MOCK_SEMOS.length === 0;
@@ -57,7 +60,6 @@ export default function MyPage() {
 
   // 이 기기에 저장된 기록(닉네임 등)을 모두 지우고 시작 화면으로 이동
   const handleDeleteRecords = () => {
-    if (!window.confirm('이 기기에서의 기록을 모두 삭제할까요?')) return;
     localStorage.clear();
     navigate('/');
   };
@@ -66,17 +68,19 @@ export default function MyPage() {
     <MobileLayout hasBottomNav bottomNavType="main">
       <Header variant="logo" />
       <div className="flex flex-col gap-[30px] px-6 pb-6 pt-[30px]">
-        <h2 className="text-[26px] font-bold leading-tight text-black">마이페이지</h2>
+        <h2 className="text-[26px] font-bold leading-[1.2] text-black">마이페이지</h2>
 
         {isNewUser ? (
           // 신규: 이용 안내만
-          <MenuItem label="사진 공개 범위 및 이용 안내" onClick={handleOpenGuide} />
+          <div className="-mt-[10px]">
+            <MenuItem label="사진 공개 범위 및 이용 안내" onClick={handleOpenGuide} />
+          </div>
         ) : (
           // 기존: 설정 + 내 활동
           <>
             <section>
               <SectionTitle>설정</SectionTitle>
-              <div className="flex flex-col gap-2.5">
+              <div className="flex flex-col gap-2">
                 <MenuItem label="기본 닉네임 변경" onClick={handleChangeNickname} />
                 <MenuItem label="사진 공개 범위 및 이용 안내" onClick={handleOpenGuide} />
               </div>
@@ -84,11 +88,19 @@ export default function MyPage() {
 
             <section>
               <SectionTitle>내 활동</SectionTitle>
-              <MenuItem label="이 기기에서의 기록 모두 삭제" onClick={handleDeleteRecords} />
+              <MenuItem label="이 기기에서의 기록 모두 삭제" onClick={() => setDeleteOpen(true)} />
             </section>
           </>
         )}
       </div>
+
+      <ConfirmModal
+        open={deleteOpen}
+        title="기록을 삭제하겠습니까?"
+        description={'이 기기에 저장된 기록이 모두 사라집니다.\n삭제된 데이터는 되돌릴 수 없습니다.'}
+        onCancel={() => setDeleteOpen(false)}
+        onConfirm={handleDeleteRecords}
+      />
     </MobileLayout>
   );
 }
