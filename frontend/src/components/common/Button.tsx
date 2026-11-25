@@ -19,7 +19,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 // variant별 활성 상태 스타일
 const VARIANT_STYLES: Record<ButtonVariant, string> = {
   primary: 'bg-primary text-white active:brightness-95',
-  secondary: 'bg-white text-primary border border-primary-border active:bg-primary-disabled',
+  secondary: 'bg-white text-primary-text border border-primary-border active:bg-primary-disabled',
   warning: 'bg-warning-bg text-warning-text active:brightness-95',
 };
 
@@ -37,7 +37,7 @@ export default function Button({
   ...rest
 }: ButtonProps) {
   const base =
-    'h-[55px] px-4 rounded-2xl text-sm font-semibold transition-colors flex items-center justify-center gap-1';
+    'h-[55px] px-4 rounded-2xl text-[15px] font-bold transition-colors flex items-center justify-center gap-1';
   const width = fullWidth ? 'w-full' : '';
   const disabledStyle = variant === 'warning' ? WARNING_DISABLED_STYLE : DISABLED_STYLE;
   const style = disabled ? disabledStyle : VARIANT_STYLES[variant];

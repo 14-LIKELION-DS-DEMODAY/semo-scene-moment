@@ -18,11 +18,11 @@ interface HomeContentViewProps {
 function SectionHeader({ title, onMore }: { title: string; onMore: () => void }) {
   return (
     <div className="flex items-center justify-between">
-      <h3 className="text-[18px] font-semibold text-gray-900">{title}</h3>
+      <h3 className="text-[18px] font-bold leading-[1.2] text-black">{title}</h3>
       <button
         type="button"
         onClick={onMore}
-        className="flex items-center gap-0.5 text-[12px] text-[#447F9F]"
+        className="flex items-center gap-1 text-[12px] font-medium text-[#447F9F]"
       >
         전체보기
         <img src={chevronRightIcon} alt="" className="h-3 w-3" />
@@ -42,14 +42,14 @@ export default function HomeContentView({ nickname, semoList }: HomeContentViewP
   )[0];
 
   return (
-    <div className="flex flex-col gap-[30px] px-6 pb-6 pt-[24px]">
+    <div className="flex flex-col gap-[30px] px-6 pb-6 pt-[30px]">
       {/* 인사말 + 액션 카드 2개 */}
-      <div className="flex flex-col gap-5">
-        <div>
-          <h2 className="text-[26px] font-bold leading-tight text-gray-900">
+      <div className="flex flex-col gap-[30px]">
+        <div className="flex flex-col gap-[10px]">
+          <h2 className="text-[26px] font-bold leading-[1.2] text-black">
             {nickname}님, 반갑습니다!
           </h2>
-          <p className="mt-1 text-[13px] text-gray-400">함께한 순간들을 다시 떠나볼까요?</p>
+          <p className="text-[13px] leading-[1.2] text-[#ACACAC]">함께한 순간들을 다시 만나볼까요?</p>
         </div>
 
         {/* 액션 카드 2개 */}
@@ -57,26 +57,26 @@ export default function HomeContentView({ nickname, semoList }: HomeContentViewP
           <button
             type="button"
             onClick={() => navigate('/semo/create')}
-            className="flex h-[80px] w-[170px] flex-col items-start justify-center gap-[10px] rounded-[16px] bg-[#346E90] py-[14px] pl-[16px] pr-4 text-xs font-semibold text-white"
+            className="flex h-[80px] w-[170px] flex-col items-start justify-start gap-[12px] rounded-[16px] bg-[#346E90] px-[16px] py-[14px] text-[14px] font-bold leading-[1.2] text-white"
           >
-            <img src={plusIcon} alt="" className="h-4 w-4 brightness-0 invert" />
+            <img src={plusIcon} alt="" className="h-[23px] w-[23px] brightness-0 invert" />
             <span>새 세모 만들기</span>
           </button>
           <button
             type="button"
             onClick={() => navigate('/join')}
-            className="flex h-[80px] w-[170px] flex-col items-start justify-center gap-[10px] rounded-[16px] bg-[#DDEEF5] py-[14px] pl-[16px] pr-4 text-xs font-semibold text-[#346E90]"
+            className="flex h-[80px] w-[170px] flex-col items-start justify-start gap-[12px] rounded-[16px] bg-[#DDEEF5] px-[16px] py-[14px] text-[14px] font-bold leading-[1.2] text-[#346E90]"
           >
-            <img src={linkIcon} alt="" className="h-4 w-4" />
+            <img src={linkIcon} alt="" className="h-[23px] w-[23px]" />
             <span>링크로 참여하기</span>
           </button>
         </div>
       </div>
 
       {/* 참여 중인 세모 */}
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-[13px]">
         <SectionHeader title="참여 중인 세모" onMore={() => navigate('/semo')} />
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-[10px]">
           {joinedList.map((semo) => (
             <SemoCard
               key={semo.id}
@@ -90,7 +90,7 @@ export default function HomeContentView({ nickname, semoList }: HomeContentViewP
 
       {/* 이어서 보기 */}
       {recentSemo && (
-        <section className="flex flex-col gap-3">
+        <section className="flex flex-col gap-[13px]">
           <SectionHeader title="이어서 보기" onMore={() => navigate('/semo')} />
           <SemoCard
             semo={recentSemo}

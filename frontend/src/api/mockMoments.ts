@@ -7,7 +7,7 @@ import type { Moment } from '../types/moment';
  */
 export const MOCK_MOMENTS: Record<string, Moment[]> = {
   '1': [
-    { id: 'm1', date: '2026-10-11', time: '10:00', title: 'Moment 1', photoCount: 4, memberCount: 3 },
+    { id: 'm1', date: '2026-10-11', time: '12:00', title: 'Moment 1', photoCount: 4, memberCount: 3 },
     { id: 'm2', date: '2026-10-11', time: '14:00', title: 'Moment 2', photoCount: 12, memberCount: 4 },
     { id: 'm3', date: '2026-10-11', time: '17:00', title: 'Moment 3', photoCount: 8, memberCount: 3 },
     { id: 'm4', date: '2026-10-12', time: '09:30', title: 'Moment 1', photoCount: 22, memberCount: 3 },

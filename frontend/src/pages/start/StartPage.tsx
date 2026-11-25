@@ -20,7 +20,7 @@ export default function StartPage() {
       </div>
 
       {/* 하단 버튼 영역 */}
-      <div className="flex flex-col gap-4 px-9 pb-[50px]">
+      <div className="flex flex-col gap-[15px] px-6 pb-[50px]">
         <Button onClick={() => navigate('/home')}>시작하기</Button>
         <Button variant="secondary" onClick={() => navigate('/join')}>
           초대 코드로 참여하기

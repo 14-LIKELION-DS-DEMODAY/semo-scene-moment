@@ -25,7 +25,17 @@ const BASELINE_COLOR = '#DFE9EE'; // 바닥선
 // SVG 좌표계 (viewBox = 카드 크기, 화면 폭에 맞춰 비율 그대로 축소)
 const WIDTH = 370;
 const HEIGHT = 351;
-const BASE_Y = 268; // 바닥선 y좌표
+const BASE_Y = 256; // 바닥선 y좌표 (피그마 기준)
+
+// 꼭짓점 x좌표 범위: 가장 이른 시간 ~ 가장 늦은 시간을 이 구간에 시간 비율대로 배치 (피그마 12:00=91, 17:00=288)
+const PEAK_X_MIN = 91;
+const PEAK_X_MAX = 288;
+
+/** "14:00" → 분 단위 숫자 */
+const toMinutes = (time: string) => {
+  const [h, m] = time.split(':').map(Number);
+  return h * 60 + m;
+};
 
 const VALLEY_RATIO = 0.35; // 골짜기 높이 = 인접 꼭짓점 중 낮은 쪽 × 0.35
 const START_RATIO = 0.15; // 왼쪽 시작점 높이 = 첫 꼭짓점 × 0.15
@@ -41,11 +51,18 @@ const curveTo = (from: Point, to: Point) => {
 
 export default function MomentWaveChart({ moments, selectedId, onSelect }: MomentWaveChartProps) {
   const count = moments.length;
-  const slot = WIDTH / count; // Moment 하나가 차지하는 가로 폭
+
+  // 시간 순서대로 x좌표 배치 (시간 간격에 비례)
+  const minutes = moments.map((m) => toMinutes(m.time));
+  const minTime = Math.min(...minutes);
+  const span = Math.max(...minutes) - minTime;
+  const peakX = minutes.map((t) =>
+    span === 0 ? WIDTH / 2 : PEAK_X_MIN + ((t - minTime) / span) * (PEAK_X_MAX - PEAK_X_MIN),
+  );
 
   // 꼭짓점 높이(px)와 좌표
   const heights = moments.map((m) => WAVE_HEIGHT[getWaveLevel(m.photoCount)]);
-  const peaks: Point[] = heights.map((h, i) => ({ x: slot * (i + 0.5), y: BASE_Y - h }));
+  const peaks: Point[] = heights.map((h, i) => ({ x: peakX[i], y: BASE_Y - h }));
 
   // 경로: 왼쪽 시작 → (꼭짓점 → 골짜기)* → 오른쪽 끝
   const points: Point[] = [{ x: 0, y: BASE_Y - heights[0] * START_RATIO }];
@@ -53,7 +70,7 @@ export default function MomentWaveChart({ moments, selectedId, onSelect }: Momen
     points.push(peak);
     if (i < count - 1) {
       points.push({
-        x: slot * (i + 1),
+        x: (peakX[i] + peakX[i + 1]) / 2,
         y: BASE_Y - Math.min(heights[i], heights[i + 1]) * VALLEY_RATIO,
       });
     }
@@ -125,12 +142,12 @@ export default function MomentWaveChart({ moments, selectedId, onSelect }: Momen
           onClick={() => onSelect(moment.id)}
           style={{
             left: `${(peaks[i].x / WIDTH) * 100}%`,
-            top: `${((BASE_Y + 14) / HEIGHT) * 100}%`,
+            top: `${((BASE_Y + 8) / HEIGHT) * 100}%`,
           }}
-          className="absolute flex -translate-x-1/2 flex-col items-center gap-1.5 text-[#346E90]"
+          className="absolute flex -translate-x-1/2 flex-col items-center gap-[10px] whitespace-nowrap leading-[1.2] text-[#346E90]"
         >
-          <span className="text-sm font-bold">{moment.time}</span>
-          <span className="text-xs">{moment.title}</span>
+          <span className="text-[12px] font-semibold">{moment.time}</span>
+          <span className="text-[11px]">{moment.title}</span>
         </button>
       ))}
     </div>

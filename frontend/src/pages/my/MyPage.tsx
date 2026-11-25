@@ -84,11 +84,7 @@ export default function MyPage() {
 
             <section>
               <SectionTitle>내 활동</SectionTitle>
-              <MenuItem
-                label="이 기기에서의 기록 모두 삭제"
-                onClick={handleDeleteRecords}
-                showArrow={false}
-              />
+              <MenuItem label="이 기기에서의 기록 모두 삭제" onClick={handleDeleteRecords} />
             </section>
           </>
         )}

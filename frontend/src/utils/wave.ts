@@ -15,11 +15,11 @@ export function getWaveLevel(photoCount: number): WaveLevel {
 
 /** 단계별 꼭짓점 높이 */
 export const WAVE_HEIGHT: Record<WaveLevel, number> = {
-  1: 30,
-  2: 60,
-  3: 90,
-  4: 130,
-  5: 165,
+  1: 24,
+  2: 48,
+  3: 72,
+  4: 104,
+  5: 132,
 };
 
 /** "2026-10-11" → "10월 11일" */
