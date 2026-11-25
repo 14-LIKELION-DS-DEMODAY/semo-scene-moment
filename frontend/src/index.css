@@ -18,3 +18,7 @@
   --color-subtle: #728b9b;
   --color-skeleton: #d9d9d9;
 }
+/* 모바일 화면(최대 402px) 바깥 영역 배경 */
+body {
+  background-color: #edf4f8;
+}
