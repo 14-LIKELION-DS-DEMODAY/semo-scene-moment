@@ -37,15 +37,15 @@ export default function SemoCard({ semo, variant = 'compact', onClick }: SemoCar
       <button
         type="button"
         onClick={onClick}
-        className="flex h-[59px] w-full max-w-[354px] items-center gap-[10px] rounded-[14px] border border-[#DFE9EE] bg-white p-[7px] text-left"
+        className="flex h-[59px] w-full max-w-[354px] items-center gap-[15px] rounded-[14px] border border-[#DFE9EE] bg-white p-[7px] text-left"
       >
         <Thumbnail url={semo.thumbnailUrl} className="h-[45px] w-[45px] shrink-0 rounded-[10px]" />
-        <div className="flex flex-col gap-0.5 overflow-hidden">
-          <span className="truncate text-[13px] font-semibold text-gray-900">{semo.title}</span>
-          <span className="flex gap-2 text-[11px] text-gray-500">
+        <div className="flex flex-col gap-[9px] overflow-hidden text-black">
+          <span className="truncate text-[14px] font-bold leading-[1.2]">{semo.title}</span>
+          <span className="flex gap-[16px] text-[11px] leading-[1.2]">
+            <span>{shortDate(semo.date)}</span>
             <span>{semo.photoCount}장</span>
             <span>{semo.memberCount}명</span>
-            <span>{shortDate(semo.date)}</span>
           </span>
         </div>
       </button>
@@ -58,17 +58,17 @@ export default function SemoCard({ semo, variant = 'compact', onClick }: SemoCar
       <button
         type="button"
         onClick={onClick}
-        className="flex w-full max-w-[354px] flex-col overflow-hidden rounded-[14px] border border-[#DFE9EE] bg-white p-2.5 text-left"
+        className="flex w-full max-w-[354px] flex-col overflow-hidden rounded-[17px] border border-[#DFE9EE] bg-white px-2 pb-6 pt-2 text-left"
       >
         <div className="relative">
-          <Thumbnail url={semo.thumbnailUrl} className="h-40 w-full rounded-[10px]" />
-          <span className="absolute left-2.5 top-2.5 flex items-center justify-center gap-[10px] rounded-[13px] bg-white px-[20px] py-[6px] text-[11px] font-medium text-[#346E90]">
+          <Thumbnail url={semo.thumbnailUrl} className="h-[143px] w-full rounded-[12px]" />
+          <span className="absolute left-2.5 top-2.5 flex items-center justify-center rounded-[13px] bg-white px-[20px] py-[6px] text-[11px] font-medium text-[#346E90]">
             최근 열어봄
           </span>
         </div>
-        <div className="mt-3 flex flex-col gap-1 px-0.5 pb-1">
-          <span className="text-[18px] font-semibold text-gray-900">{semo.title}</span>
-          <span className="flex gap-3 text-[13px] text-gray-500">
+        <div className="mt-[14px] flex flex-col gap-[16px] text-black">
+          <span className="text-[18px] font-bold leading-[1.2]">{semo.title}</span>
+          <span className="flex gap-[16px] text-[12px] leading-[1.2]">
             <span>사진 {semo.photoCount}장</span>
             <span>참여자 {semo.memberCount}명</span>
             <span>{shortDate(semo.date)}</span>

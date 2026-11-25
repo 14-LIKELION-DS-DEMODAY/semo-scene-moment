@@ -33,7 +33,7 @@ export default function SemoDetailPage() {
     <MobileLayout hasBottomNav={hasPhotos} bottomNavType="semo" semoId={semoId}>
       <Header variant="back" title="세모 보기" />
       <div className="flex flex-1 flex-col px-6 pb-6 pt-[60px]">
-        <h2 className="mb-[20px] text-[26px] font-bold leading-tight text-gray-900">
+        <h2 className="mb-[20px] text-[26px] font-bold leading-[1.2] text-black">
           {semo.title}
         </h2>
         {hasPhotos ? <WaveSemoView moments={moments} /> : <EmptySemoView semoId={semoId} />}

@@ -39,11 +39,11 @@ export default function Header({ variant, title, onBack, rightElement }: HeaderP
   // 뒤로가기 헤더
   return (
     <header className="flex shrink-0 items-center justify-between px-6 pt-[60px]">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-[13px]">
         <button type="button" onClick={handleBack} aria-label="뒤로가기" className="-ml-1 p-1">
-          <img src={backImg} alt="" className="h-4 w-4" />
+          <img src={backImg} alt="" className="h-[19px] w-[19px]" />
         </button>
-        {title && <h1 className="text-[18px] font-semibold text-gray-900">{title}</h1>}
+        {title && <h1 className="text-[19px] font-bold leading-[1.2] text-black">{title}</h1>}
       </div>
 
       {/* 우측 선택 요소 (닫기 등). 없으면 비워둠 */}

@@ -81,7 +81,7 @@ export default function BottomNav({ type, semoId }: BottomNavProps) {
   return (
     <nav
       className={`sticky bottom-0 z-10 flex h-[89px] shrink-0 items-center border-t border-[#C9DFEA] bg-white py-[20px] ${
-        type === 'main' ? 'justify-center gap-[100px] px-[57px]' : 'justify-around px-6'
+        type === 'main' ? 'justify-center gap-[100px] px-[57px]' : 'justify-center gap-[90px] px-[61px]'
       }`}
     >
       {tabs.map((tab) => (
@@ -89,7 +89,7 @@ export default function BottomNav({ type, semoId }: BottomNavProps) {
           key={tab.to}
           to={tab.to}
           end={tab.end}
-          className="flex shrink-0 flex-col items-center justify-center gap-1"
+          className="flex shrink-0 flex-col items-center justify-center gap-[5px]"
         >
           {({ isActive }) => {
             const highlighted = type === 'semo' || isActive;
@@ -99,11 +99,11 @@ export default function BottomNav({ type, semoId }: BottomNavProps) {
                 <img
                   src={isActive ? tab.iconActive : tab.icon}
                   alt=""
-                  className="h-6 w-6"
+                  className="h-[27px] w-[27px]"
                 />
                 <span
-                  className={`text-[11px] ${
-                    highlighted ? 'font-semibold text-[#346E90]' : 'text-gray-400'
+                  className={`text-[13px] ${
+                    highlighted ? 'font-semibold text-[#3B7797]' : 'text-[#6B9FBD]'
                   }`}
                 >
                   {tab.label}

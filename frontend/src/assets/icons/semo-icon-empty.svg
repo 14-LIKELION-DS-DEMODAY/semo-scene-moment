@@ -1,0 +1,17 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="SEMO icon">
+<path id="Vector" d="M4.77778 5.77778H22.2222V8.55555H7.66667V23.2222H4.77778V5.77778Z" fill="#1F2E39" fill-opacity="0.3"/>
+<path id="Vector_2" d="M77.8889 5H95.5556V20.8889H92.6667V8H77.8889V5Z" fill="#1F2E39" fill-opacity="0.3"/>
+<path id="Vector_3" d="M92.6667 76.6667H95.5556V94.1111H78.1111V91.1111H92.6667V76.6667Z" fill="#1F2E39" fill-opacity="0.3"/>
+<path id="Vector_4" d="M12.4444 19.3333H55.4444V43.2222H53.3333V21.5556H14.5556V48.3333H48L47.1111 50.5556H12.4444V19.3333Z" fill="#1F2E39" fill-opacity="0.3"/>
+<path id="Vector_5" d="M12.4444 57.1111H51.7778V88H12.4444V57.1111ZM14.5556 59.3333V85.7778H49.6667V59.3333H14.5556Z" fill-rule="evenodd" clip-rule="evenodd" fill="#1F2E39" fill-opacity="0.3"/>
+<path id="Vector_6" d="M60 19.3333H85.7778V81.5556H56.6667V57.2222H59.2222C61.8889 57.2222 63.3333 55.6667 63.4444 53.1111C63.5556 50.8889 61.3333 48.5556 60 46.2222V19.3333Z" fill="url(#paint0_linear_0_21)" fill-opacity="0.3"/>
+<path id="Vector_7" d="M54.4444 45.3333C55.1111 45.2222 55.6667 45.7778 56.1111 46.5556L59.4444 51.8889C60.2222 53.2222 59.5556 54.6667 58.1111 54.6667H51C49.5556 54.6667 48.8889 53.3333 49.6667 52L53 46.5556C53.4444 45.7778 53.8889 45.3333 54.4444 45.3333Z" fill="#1F2E39" fill-opacity="0.3"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_0_21" x1="56.6667" y1="19.3333" x2="104.433" y2="41.6813" gradientUnits="userSpaceOnUse">
+<stop stop-color="#5B90B3"/>
+<stop offset="1" stop-color="#6B9FBD"/>
+</linearGradient>
+</defs>
+</svg>
