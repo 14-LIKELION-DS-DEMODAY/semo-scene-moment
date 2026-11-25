@@ -36,7 +36,7 @@ export default function SemoDetailPage() {
         <h2 className="mb-[20px] text-[26px] font-bold leading-[1.2] text-black">
           {semo.title}
         </h2>
-        {hasPhotos ? <WaveSemoView moments={moments} /> : <EmptySemoView semoId={semoId} />}
+        {hasPhotos ? <WaveSemoView semoId={semoId} moments={moments} /> : <EmptySemoView semoId={semoId} />}
       </div>
     </MobileLayout>
   );

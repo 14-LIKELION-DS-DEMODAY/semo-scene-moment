@@ -60,13 +60,13 @@ export default function SemoListPage() {
 
       {/* 로고와 제목 사이 */}
       <div className="flex flex-col px-6 pb-6 pt-[30px]">
-        <h2 className="mb-[30px] text-[26px] font-bold leading-tight text-gray-900">
+        <h2 className="mb-[30px] text-[26px] font-bold leading-[1.2] text-gray-900">
           참여 중인 세모
         </h2>
 
         {/* 검색창 */}
         <div className="flex h-[46px] w-full max-w-[354px] items-center gap-[15px] rounded-[14px] bg-[#F4F8FA] pl-[20px] pr-4">
-          <img src={searchIcon} alt="" className="h-4 w-4 shrink-0" />
+          <img src={searchIcon} alt="" className="h-[21px] w-[21px] shrink-0" />
           <input
             type="text"
             value={searchQuery}
@@ -77,17 +77,17 @@ export default function SemoListPage() {
         </div>
 
         {/* 정렬 드롭다운 */}
-        <div className="relative mt-4 mb-3 flex justify-end">
+        <div className="relative mt-4 mb-[15.4px] flex justify-end">
           <button
             type="button"
             onClick={() => setIsDropdownOpen((prev) => !prev)}
-            className="flex items-center gap-1 text-[12px] text-[#728B9B]"
+            className="flex items-center gap-1 text-[12px] leading-[1.2] text-[#728B9B]"
           >
             {currentLabel}
             <img
               src={chevronDownIcon}
               alt=""
-              className={`h-2.5 w-2.5 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+              className={`h-[7px] w-[7px] transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
             />
           </button>
 
@@ -99,15 +99,13 @@ export default function SemoListPage() {
                 className="fixed inset-0 z-10 cursor-default"
                 onClick={() => setIsDropdownOpen(false)}
               />
-              <ul className="absolute right-0 top-full z-20 mt-1 w-[61px] divide-y-[0.6px] divide-[#346E90] overflow-hidden rounded-[2px] border-[0.6px] border-[#346E90] bg-white">
-                {SORT_OPTIONS.map((option) => (
+              <ul className="absolute right-[13px] top-full z-20 mt-[1.6px] w-[61px] divide-y-[0.6px] divide-[#346E90] overflow-hidden rounded-[2px] border-[0.6px] border-[#346E90] bg-white">
+                {SORT_OPTIONS.filter((option) => option.value !== sortType).map((option) => (
                   <li key={option.value}>
                     <button
                       type="button"
                       onClick={() => handleSelectSort(option.value)}
-                      className={`flex h-[25px] w-full items-center justify-center text-[12px] ${
-                        option.value === sortType ? 'font-semibold text-[#346E90]' : 'text-[#728B9B]'
-                      }`}
+                      className="flex h-[24px] w-full items-center justify-center text-[12px] text-[#728B9B]"
                     >
                       {option.label}
                     </button>
