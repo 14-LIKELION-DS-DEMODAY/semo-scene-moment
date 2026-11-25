@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/semo
+    username: semo
+    password: 여기에_본인_비밀번호
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
