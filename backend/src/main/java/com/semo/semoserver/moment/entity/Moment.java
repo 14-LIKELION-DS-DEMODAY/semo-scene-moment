@@ -38,4 +38,14 @@ public class Moment extends BaseTimeEntity {
     public void changeRepresentativePhoto(Photo photo) { this.representativePhoto = photo; }
 
     public void changePhotoCount(int photoCount) { this.photoCount = photoCount; }
+
+    // 재계산(MomentRecalculator)에서 호출
+    public void refresh(LocalDateTime startAt, LocalDateTime endAt,
+                        BigDecimal centerLatitude, BigDecimal centerLongitude, int photoCount) {
+        this.startAt = startAt;
+        this.endAt = endAt;
+        this.centerLatitude = centerLatitude;
+        this.centerLongitude = centerLongitude;
+        this.photoCount = photoCount;
+    }
 }
