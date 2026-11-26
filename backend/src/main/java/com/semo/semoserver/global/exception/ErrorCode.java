@@ -27,7 +27,9 @@ public enum ErrorCode {
     TOO_MANY_FILES(HttpStatus.BAD_REQUEST, "한 번에 올릴 수 있는 사진 수를 넘었습니다."),
     PHOTO_NOT_FOUND(HttpStatus.NOT_FOUND, "사진을 찾을 수 없습니다."),
     MOMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "Moment를 찾을 수 없습니다."),
-    ANALYSIS_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "사진을 분석하지 못했어요.");
+    ANALYSIS_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "사진을 분석하지 못했어요."),
+    UPLOAD_NOT_FOUND(HttpStatus.NOT_FOUND, "업로드 정보를 찾을 수 없습니다."),
+    UPLOAD_NOT_IN_PROGRESS(HttpStatus.CONFLICT, "이미 완료되었거나 취소된 업로드입니다.");
 
     private final HttpStatus status;
     private final String message;
