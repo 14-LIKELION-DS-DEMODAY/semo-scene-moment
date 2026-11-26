@@ -102,4 +102,24 @@ public class UploadBatch extends BaseTimeEntity {
     public boolean isUploading() {
         return status == UploadStatus.UPLOADING;
     }
+
+    public boolean isFailed() {
+        return status == UploadStatus.FAILED;
+    }
+
+    public boolean isCanceled() {
+        return status == UploadStatus.CANCELED;
+    }
+
+    // 취소는 업로드 중이거나 실패한 경우만
+    public boolean canCancel() {
+        return status == UploadStatus.UPLOADING || status == UploadStatus.FAILED;
+    }
+
+    // 다시 시도 전에 업로드 중 상태로 되돌림
+    public void reopen() {
+        this.status = UploadStatus.UPLOADING;
+        this.step = null;
+        this.errorMessage = null;
+    }
 }

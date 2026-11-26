@@ -1,13 +1,16 @@
 package com.semo.semoserver.upload.service;
 
+import com.semo.semoserver.comment.repository.CommentRepository;
 import com.semo.semoserver.global.exception.CustomException;
 import com.semo.semoserver.global.exception.ErrorCode;
 import com.semo.semoserver.global.image.ImageSanitizer;
 import com.semo.semoserver.global.storage.FileStorage;
+import com.semo.semoserver.like.repository.PhotoLikeRepository;
 import com.semo.semoserver.moment.dto.MomentCount;
 import com.semo.semoserver.moment.dto.MomentListItem;
 import com.semo.semoserver.moment.entity.Moment;
 import com.semo.semoserver.moment.repository.MomentQueryRepository;
+import com.semo.semoserver.moment.service.MomentRecalculator;
 import com.semo.semoserver.participant.entity.Participant;
 import com.semo.semoserver.participant.service.SemoAccessChecker;
 import com.semo.semoserver.photo.entity.Photo;
@@ -21,17 +24,23 @@ import com.semo.semoserver.upload.dto.UploadStartResponse;
 import com.semo.semoserver.upload.dto.UploadStatusResponse;
 import com.semo.semoserver.upload.entity.AnalysisStep;
 import com.semo.semoserver.upload.entity.UploadBatch;
+import com.semo.semoserver.upload.entity.UploadStatus;
 import com.semo.semoserver.upload.repository.UploadBatchRepository;
 import com.semo.semoserver.upload.repository.UploadPhotoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -52,6 +61,9 @@ public class UploadService {
     private final PhotoMetadataReader metadataReader;
     private final FileStorage fileStorage;
     private final MomentMatcher momentMatcher;
+    private final MomentRecalculator momentRecalculator;
+    private final PhotoLikeRepository photoLikeRepository;
+    private final CommentRepository commentRepository;
 
     // 1. 업로드 시작
     @Transactional
@@ -110,22 +122,76 @@ public class UploadService {
         if (batch.getSuccessCount() == 0) {
             throw new CustomException(ErrorCode.INVALID_INPUT);
         }
+        return analyze(batch);
+    }
 
-        batch.startAnalysis();
-        batch.changeStep(AnalysisStep.MATCHING);
-        MomentMatcher.MatchResult result = momentMatcher.match(batch);
-        batch.changeStep(AnalysisStep.BUILDING);
-        batch.complete(result.newMomentCount(), result.addedPhotoCount());
-        batch.getSemo().touchActivity();
+    // 4. 분석 다시 시도 (실패한 업로드만)
+    @Transactional
+    public UploadStatusResponse retry(Long guestId, Long uploadId) {
+        UploadBatch batch = getMyBatch(guestId, uploadId);
+        if (!batch.isFailed()) {
+            throw new CustomException(ErrorCode.UPLOAD_NOT_FAILED);
+        }
+        batch.reopen();
+        return analyze(batch);
+    }
+
+    // 5. 분석 실패 기록
+    //    분석 트랜잭션이 롤백된 뒤 컨트롤러에서 따로 부름 (같이 롤백되지 않게)
+    @Transactional
+    public void markFailed(Long uploadId) {
+        uploadBatchRepository.findById(uploadId)
+                .filter(b -> b.getStatus() == UploadStatus.UPLOADING || b.getStatus() == UploadStatus.FAILED)
+                .ifPresent(b -> b.fail(ErrorCode.ANALYSIS_FAILED.getMessage()));
+    }
+
+    // 6. 업로드 취소: 이번 업로드 사진과 파일을 지우고 CANCELED로
+    @Transactional
+    public UploadStatusResponse cancel(Long guestId, Long uploadId) {
+        UploadBatch batch = getMyBatch(guestId, uploadId);
+        if (batch.isCanceled()) {
+            return UploadStatusResponse.from(batch); // 이미 취소됨
+        }
+        if (!batch.canCancel()) {
+            throw new CustomException(ErrorCode.UPLOAD_NOT_IN_PROGRESS);
+        }
+
+        List<Photo> photos = uploadPhotoRepository.findBatchPhotos(batch.getId());
+        Set<Long> momentIds = new LinkedHashSet<>();
+        List<String> storageKeys = new ArrayList<>();
+
+        for (Photo photo : photos) {
+            Moment moment = photo.getMoment();
+            if (moment != null) {
+                momentIds.add(moment.getId());
+                if (moment.getRepresentativePhoto() != null
+                        && moment.getRepresentativePhoto().getId().equals(photo.getId())) {
+                    moment.changeRepresentativePhoto(null);
+                }
+            }
+            // 사진을 가리키는 행 먼저 정리 (B의 사진 삭제와 같은 순서)
+            photoLikeRepository.deleteAllByPhotoId(photo.getId());
+            commentRepository.deleteAllByPhotoId(photo.getId());
+            storageKeys.add(photo.getStorageKey());
+        }
+
+        uploadPhotoRepository.deleteAll(photos);
+        uploadPhotoRepository.flush();
+        for (Long momentId : momentIds) {
+            momentRecalculator.recalculate(momentId);
+        }
+
+        batch.cancel();
+        deleteFilesAfterCommit(storageKeys);
         return UploadStatusResponse.from(batch);
     }
 
-    // 4. 분석 상태 조회
+    // 7. 분석 상태 조회
     public UploadStatusResponse getStatus(Long guestId, Long uploadId) {
         return UploadStatusResponse.from(getMyBatch(guestId, uploadId));
     }
 
-    // 5. 매칭 결과
+    // 8. 매칭 결과
     public UploadResultResponse getResult(Long guestId, Long uploadId) {
         UploadBatch batch = getMyBatch(guestId, uploadId);
         Long semoId = batch.getSemo().getId();
@@ -148,6 +214,31 @@ public class UploadService {
 
         long reviewCount = uploadPhotoRepository.countByUploadBatch_IdAndMatchStatusIn(batch.getId(), REVIEW_STATUSES);
         return new UploadResultResponse(batch.getNewMomentCount(), batch.getSuccessCount(), reviewCount, moments);
+    }
+
+    // 분석 실행 (완료·다시 시도가 같이 씀)
+    private UploadStatusResponse analyze(UploadBatch batch) {
+        batch.startAnalysis();
+        batch.changeStep(AnalysisStep.MATCHING);
+        MomentMatcher.MatchResult result = momentMatcher.match(batch);
+        batch.changeStep(AnalysisStep.BUILDING);
+        batch.complete(result.newMomentCount(), result.addedPhotoCount());
+        batch.getSemo().touchActivity();
+        return UploadStatusResponse.from(batch);
+    }
+
+    // DB 삭제가 확정된 뒤에 파일 삭제
+    private void deleteFilesAfterCommit(List<String> storageKeys) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            storageKeys.forEach(fileStorage::delete);
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                storageKeys.forEach(fileStorage::delete);
+            }
+        });
     }
 
     // 내가 시작한 업로드만
