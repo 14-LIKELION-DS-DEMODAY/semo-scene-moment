@@ -75,7 +75,7 @@ public class SemoService {
     public Optional<SemoCreateResponse> findCreatedByRequestId(Long guestId, String requestId) {
         return semoRepository.findByCreateRequestId(requestId)
                 .map(semo -> {
-                    participantRepository.findBySemo_IdAndGuest_Id(somo.getId(), guestId)
+                    participantRepository.findBySemo_IdAndGuest_Id(semo.getId(), guestId)
                             .filter(Participant::isOwner)
                             .orElseThrow(() -> new CustomException(ErrorCode.FORBIDDEN));
                     return toCreateResponse(semo);
