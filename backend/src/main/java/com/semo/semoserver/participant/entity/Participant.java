@@ -2,7 +2,7 @@ package com.semo.semoserver.participant.entity;
 
 import com.semo.semoserver.global.entity.BaseTimeEntity;
 import com.semo.semoserver.guest.entity.Guest;
-import com.semo.semoserver.semo.entity.Seomo;
+import com.semo.semoserver.semo.entity.Semo;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -26,9 +26,9 @@ import java.time.LocalDateTime;
         name = "participant",
         uniqueConstraints = {
                 // 두 번 참여 방지
-                @UniqueConstraint(name = "uk_participant_seomo_guest", columnNames = {"seomo_id", "guest_id"}),
+                @UniqueConstraint(name = "uk_participant_semo_guest", columnNames = {"semo_id", "guest_id"}),
                 // 닉네임 중복 금지
-                @UniqueConstraint(name = "uk_participant_seomo_nickname", columnNames = {"seomo_id", "nickname"})
+                @UniqueConstraint(name = "uk_participant_semo_nickname", columnNames = {"semo_id", "nickname"})
         }
 )
 @Getter
@@ -40,8 +40,8 @@ public class Participant extends BaseTimeEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "seomo_id", nullable = false)
-    private Seomo seomo;
+    @JoinColumn(name = "semo_id", nullable = false)
+    private Semo semo;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "guest_id", nullable = false)
@@ -59,9 +59,9 @@ public class Participant extends BaseTimeEntity {
     @Column(name = "last_viewed_at")
     private LocalDateTime lastViewedAt;
 
-    public static Participant create(Seomo seomo, Guest guest, String nickname, ParticipantRole role) {
+    public static Participant create(Semo semo, Guest guest, String nickname, ParticipantRole role) {
         Participant participant = new Participant();
-        participant.seomo = seomo;
+        participant.semo = semo;
         participant.guest = guest;
         participant.nickname = nickname;
         participant.role = role;

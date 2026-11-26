@@ -2,7 +2,7 @@ package com.semo.semoserver.moment.entity;
 
 import com.semo.semoserver.global.entity.BaseTimeEntity;
 import com.semo.semoserver.photo.entity.Photo;
-import com.semo.semoserver.seomo.entity.Seomo;
+import com.semo.semoserver.semo.entity.Semo;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -18,8 +18,8 @@ import java.time.LocalDateTime;
 public class Moment extends BaseTimeEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "seomo_id", nullable = false)
-    private Seomo seomo;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "semo_id", nullable = false)
+    private Semo semo;
     @Column(nullable = false, length = 30) private String name;
     @Column(name = "start_at", nullable = false) private LocalDateTime startAt;
     @Column(name = "end_at", nullable = false) private LocalDateTime endAt;
@@ -29,8 +29,8 @@ public class Moment extends BaseTimeEntity {
     private Photo representativePhoto;
     @Column(name = "photo_count", nullable = false) private int photoCount;
 
-    public static Moment create(Seomo seomo, String name, LocalDateTime startAt, LocalDateTime endAt, int photoCount) {
-        Moment m = new Moment(); m.seomo = seomo; m.name = name; m.startAt = startAt; m.endAt = endAt; m.photoCount = photoCount; return m;
+    public static Moment create(Semo semo, String name, LocalDateTime startAt, LocalDateTime endAt, int photoCount) {
+        Moment m = new Moment(); m.semo = semo; m.name = name; m.startAt = startAt; m.endAt = endAt; m.photoCount = photoCount; return m;
     }
 
     public void changeName(String name) { this.name = name; }

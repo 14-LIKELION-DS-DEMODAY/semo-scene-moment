@@ -16,7 +16,7 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다."),
 
     // 세모·참여 (B)
-    SEOMO_NOT_FOUND(HttpStatus.NOT_FOUND, "세모를 찾을 수 없습니다."),
+    SEMO_NOT_FOUND(HttpStatus.NOT_FOUND, "세모를 찾을 수 없습니다."),
     INVITE_NOT_FOUND(HttpStatus.NOT_FOUND, "링크를 찾을 수 없어요."),
     DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다."),
     ALREADY_JOINED(HttpStatus.CONFLICT, "이미 참여한 세모입니다."),

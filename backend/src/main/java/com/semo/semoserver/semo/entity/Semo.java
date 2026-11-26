@@ -14,10 +14,10 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "seomo")
+@Table(name = "semo")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Seomo extends BaseTimeEntity {
+public class Semo extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,13 +42,13 @@ public class Seomo extends BaseTimeEntity {
     @Column(name = "create_request_id", unique = true, length = 36)
     private String createRequestId;
 
-    public static Seomo create(String name, String inviteCode, String createRequestId) {
-        Seomo seomo = new Seomo();
-        seomo.name = name;
-        seomo.inviteCode = inviteCode;
-        seomo.createRequestId = createRequestId;
-        seomo.lastActivityAt = LocalDateTime.now();
-        return seomo;
+    public static Semo create(String name, String inviteCode, String createRequestId) {
+        Semo semo = new Semo();
+        semo.name = name;
+        semo.inviteCode = inviteCode;
+        semo.createRequestId = createRequestId;
+        semo.lastActivityAt = LocalDateTime.now();
+        return semo;
     }
 
     public void changeCoverImageKey(String coverImageKey) {

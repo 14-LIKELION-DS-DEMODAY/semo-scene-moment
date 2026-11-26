@@ -1,15 +1,15 @@
 package com.semo.semoserver.semo.repository;
 
-import com.semo.semoserver.semo.entity.Seomo;
+import com.semo.semoserver.semo.entity.Semo;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-public interface SeomoRepository extends JpaRepository<Seomo, Long> {
+public interface SemoRepository extends JpaRepository<Semo, Long> {
 
     boolean existsByInviteCode(String inviteCode);
 
-    Optional<Seomo> findByInviteCode(String inviteCode);
+    Optional<Semo> findByInviteCode(String inviteCode);
 
-    Optional<Seomo> findByCreateRequestId(String createRequestId);
+    Optional<Semo> findByCreateRequestId(String createRequestId);
 }

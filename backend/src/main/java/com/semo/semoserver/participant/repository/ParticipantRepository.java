@@ -10,11 +10,11 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
 
     boolean existsByGuest_Id(Long guestId);
 
-    boolean existsBySeomo_IdAndGuest_Id(Long seomoId, Long guestId);
+    boolean existsBySemo_IdAndGuest_Id(Long semoId, Long guestId);
 
-    boolean existsBySeomo_IdAndNickname(Long seomoId, String nickname);
+    boolean existsBySemo_IdAndNickname(Long semoId, String nickname);
 
-    Optional<Participant> findBySeomo_IdAndGuest_Id(Long seomoId, Long guestId);
+    Optional<Participant> findBySemo_IdAndGuest_Id(Long semoId, Long guestId);
 
-    List<Participant> findBySeomo_IdOrderByIdAsc(Long seomoId);
+    List<Participant> findBySemo_IdOrderByIdAsc(Long semoId);
 }

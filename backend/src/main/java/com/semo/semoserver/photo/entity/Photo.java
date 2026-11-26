@@ -21,7 +21,7 @@ public class Photo extends BaseTimeEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "seomo_id", nullable = false)
-    private Seomo seomo;
+    private Semo semo;
     @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "participant_id", nullable = false)
     private Participant participant;
     @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "upload_batch_id", nullable = false)
