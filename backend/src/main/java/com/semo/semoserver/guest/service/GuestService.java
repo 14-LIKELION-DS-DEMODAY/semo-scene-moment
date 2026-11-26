@@ -28,8 +28,8 @@ public class GuestService {
 
     public GuestMeResponse getMe(Long guestId) {
         Guest guest = getGuest(guestId);
-        boolean hasSeomo = participantRepository.existsByGuest_Id(guestId);
-        return new GuestMeResponse(guest.getDefaultNickname(), hasSeomo);
+        boolean hasSemo = participantRepository.existsByGuest_Id(guestId);
+        return new GuestMeResponse(guest.getDefaultNickname(), hasSemo);
     }
 
     // 새로 참여하는 세모부터 적용

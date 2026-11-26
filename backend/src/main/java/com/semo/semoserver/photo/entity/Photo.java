@@ -3,7 +3,7 @@ package com.semo.semoserver.photo.entity;
 import com.semo.semoserver.global.entity.BaseTimeEntity;
 import com.semo.semoserver.moment.entity.Moment;
 import com.semo.semoserver.participant.entity.Participant;
-import com.semo.semoserver.seomo.entity.Seomo;
+import com.semo.semoserver.semo.entity.Semo;
 import com.semo.semoserver.upload.entity.UploadBatch;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 public class Photo extends BaseTimeEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "seomo_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "semo_id", nullable = false)
     private Semo semo;
     @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "participant_id", nullable = false)
     private Participant participant;
@@ -39,9 +39,9 @@ public class Photo extends BaseTimeEntity {
     @Enumerated(EnumType.STRING) @Column(name = "match_status", nullable = false)
     private PhotoMatchStatus matchStatus;
 
-    public static Photo create(Seomo seomo, Participant participant, UploadBatch batch, Moment moment,
+    public static Photo create(Semo semo, Participant participant, UploadBatch batch, Moment moment,
                                String storageKey, LocalDateTime takenAt, PhotoMatchStatus status) {
-        Photo p = new Photo(); p.seomo = seomo; p.participant = participant; p.uploadBatch = batch; p.moment = moment;
+        Photo p = new Photo(); p.semo = semo; p.participant = participant; p.uploadBatch = batch; p.moment = moment;
         p.storageKey = storageKey; p.originalFilename = "a.jpg"; p.contentType = "image/jpeg";
         p.width = 3024; p.height = 4032; p.takenAt = takenAt; p.matchStatus = status;
         p.latitude = new BigDecimal("35.158700"); p.longitude = new BigDecimal("129.160400");
