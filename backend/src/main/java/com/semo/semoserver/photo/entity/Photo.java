@@ -52,4 +52,30 @@ public class Photo extends BaseTimeEntity {
         this.moment = moment;
         this.matchStatus = PhotoMatchStatus.MATCHED;
     }
+    // 업로드 직후 생성. 분석 전이라 Moment는 비어 있음
+    public static Photo upload(Semo semo, Participant participant, UploadBatch batch,
+                               String storageKey, String originalFilename, String contentType,
+                               Integer width, Integer height, LocalDateTime takenAt,
+                               BigDecimal latitude, BigDecimal longitude) {
+        Photo p = new Photo();
+        p.semo = semo;
+        p.participant = participant;
+        p.uploadBatch = batch;
+        p.storageKey = storageKey;
+        p.originalFilename = originalFilename;
+        p.contentType = contentType;
+        p.width = width;
+        p.height = height;
+        p.takenAt = takenAt;
+        p.latitude = latitude;
+        p.longitude = longitude;
+        p.matchStatus = takenAt == null ? PhotoMatchStatus.UNCLASSIFIED : PhotoMatchStatus.NEEDS_REVIEW;
+        return p;
+    }
+
+    // Moment에서 빼고 확인 필요 상태로 되돌림
+    public void markNeedsReview() {
+        this.moment = null;
+        this.matchStatus = takenAt == null ? PhotoMatchStatus.UNCLASSIFIED : PhotoMatchStatus.NEEDS_REVIEW;
+    }
 }
