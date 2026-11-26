@@ -32,7 +32,7 @@ public class GuestController {
         return ApiResponse.ok(guestService.issueGuestKey());
     }
 
-    @Operation(summary = "내 정보", description = "첫 진입 분기(hasSeomo)와 인사 문구용 기본 닉네임")
+    @Operation(summary = "내 정보", description = "첫 진입 분기(hasSemo)와 인사 문구용 기본 닉네임")
     @GetMapping("/me")
     public ApiResponse<GuestMeResponse> getMe(@CurrentGuest Long guestId) {
         return ApiResponse.ok(guestService.getMe(guestId));
