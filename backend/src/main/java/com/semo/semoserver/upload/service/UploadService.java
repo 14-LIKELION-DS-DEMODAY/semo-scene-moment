@@ -22,9 +22,7 @@ import com.semo.semoserver.upload.dto.PhotoUploadResponse;
 import com.semo.semoserver.upload.dto.UploadResultResponse;
 import com.semo.semoserver.upload.dto.UploadStartResponse;
 import com.semo.semoserver.upload.dto.UploadStatusResponse;
-import com.semo.semoserver.upload.entity.AnalysisStep;
 import com.semo.semoserver.upload.entity.UploadBatch;
-import com.semo.semoserver.upload.entity.UploadStatus;
 import com.semo.semoserver.upload.repository.UploadBatchRepository;
 import com.semo.semoserver.upload.repository.UploadPhotoRepository;
 import lombok.RequiredArgsConstructor;
@@ -60,10 +58,10 @@ public class UploadService {
     private final ImageSanitizer imageSanitizer;
     private final PhotoMetadataReader metadataReader;
     private final FileStorage fileStorage;
-    private final MomentMatcher momentMatcher;
     private final MomentRecalculator momentRecalculator;
     private final PhotoLikeRepository photoLikeRepository;
     private final CommentRepository commentRepository;
+    private final AnalysisRunner analysisRunner;
 
     // 1. 업로드 시작
     @Transactional
@@ -112,7 +110,7 @@ public class UploadService {
         }
     }
 
-    // 3. 업로드 완료 → 분석 (1차 버전: 요청 안에서 바로 처리)
+    // 3. 업로드 완료 → ANALYZING으로 바꾸고 바로 응답, 분석은 백그라운드에서
     @Transactional
     public UploadStatusResponse complete(Long guestId, Long uploadId) {
         UploadBatch batch = getMyBatch(guestId, uploadId);
@@ -122,7 +120,9 @@ public class UploadService {
         if (batch.getSuccessCount() == 0) {
             throw new CustomException(ErrorCode.INVALID_INPUT);
         }
-        return analyze(batch);
+        batch.startAnalysis();
+        runAnalysisAfterCommit(batch.getId());
+        return UploadStatusResponse.from(batch);
     }
 
     // 4. 분석 다시 시도 (실패한 업로드만)
@@ -132,20 +132,12 @@ public class UploadService {
         if (!batch.isFailed()) {
             throw new CustomException(ErrorCode.UPLOAD_NOT_FAILED);
         }
-        batch.reopen();
-        return analyze(batch);
+        batch.startAnalysis();
+        runAnalysisAfterCommit(batch.getId());
+        return UploadStatusResponse.from(batch);
     }
 
-    // 5. 분석 실패 기록
-    //    분석 트랜잭션이 롤백된 뒤 컨트롤러에서 따로 부름 (같이 롤백되지 않게)
-    @Transactional
-    public void markFailed(Long uploadId) {
-        uploadBatchRepository.findById(uploadId)
-                .filter(b -> b.getStatus() == UploadStatus.UPLOADING || b.getStatus() == UploadStatus.FAILED)
-                .ifPresent(b -> b.fail(ErrorCode.ANALYSIS_FAILED.getMessage()));
-    }
-
-    // 6. 업로드 취소: 이번 업로드 사진과 파일을 지우고 CANCELED로
+    // 5. 업로드 취소: 이번 업로드 사진과 파일을 지우고 CANCELED로
     @Transactional
     public UploadStatusResponse cancel(Long guestId, Long uploadId) {
         UploadBatch batch = getMyBatch(guestId, uploadId);
@@ -186,12 +178,12 @@ public class UploadService {
         return UploadStatusResponse.from(batch);
     }
 
-    // 7. 분석 상태 조회
+    // 6. 분석 상태 조회
     public UploadStatusResponse getStatus(Long guestId, Long uploadId) {
         return UploadStatusResponse.from(getMyBatch(guestId, uploadId));
     }
 
-    // 8. 매칭 결과
+    // 7. 매칭 결과
     public UploadResultResponse getResult(Long guestId, Long uploadId) {
         UploadBatch batch = getMyBatch(guestId, uploadId);
         Long semoId = batch.getSemo().getId();
@@ -216,15 +208,18 @@ public class UploadService {
         return new UploadResultResponse(batch.getNewMomentCount(), batch.getSuccessCount(), reviewCount, moments);
     }
 
-    // 분석 실행 (완료·다시 시도가 같이 씀)
-    private UploadStatusResponse analyze(UploadBatch batch) {
-        batch.startAnalysis();
-        batch.changeStep(AnalysisStep.MATCHING);
-        MomentMatcher.MatchResult result = momentMatcher.match(batch);
-        batch.changeStep(AnalysisStep.BUILDING);
-        batch.complete(result.newMomentCount(), result.addedPhotoCount());
-        batch.getSemo().touchActivity();
-        return UploadStatusResponse.from(batch);
+    // ANALYZING이 저장된 뒤에 분석 시작 (저장 전에 시작하면 분석 쪽에서 상태를 못 봄)
+    private void runAnalysisAfterCommit(Long batchId) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            analysisRunner.run(batchId);
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                analysisRunner.run(batchId);
+            }
+        });
     }
 
     // DB 삭제가 확정된 뒤에 파일 삭제
