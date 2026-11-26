@@ -1,4 +1,4 @@
-package com.semo.semoserver.home.respository;
+package com.semo.semoserver.home.repository;
 
 import com.semo.semoserver.home.dto.SemoCount;
 import com.semo.semoserver.home.dto.SemoPhotoStat;
@@ -22,17 +22,17 @@ public interface HomeQueryRepository extends JpaRepository<Photo, Long> {
     List<Participant> findMyParticipations(@Param("guestId") Long guestId);
 
     // 세모별 사진 수 + 첫 촬영 시각
-    @Query("select new com.semo.server.home.dto.SemoPhotoStat(p.semo.id, count(p), min(p.takenAt)) "
+    @Query("select new com.semo.semoserver.home.dto.SemoPhotoStat(p.semo.id, count(p), min(p.takenAt)) "
             + "from Photo p where p.semo.id in :semoIds group by p.semo.id")
     List<SemoPhotoStat> findPhotoStats(@Param("semoIds") Collection<Long> semoIds);
 
     // 세모별 참여자 수
-    @Query("select new com.semo.server.home.dto.SemoCount(pa.semo.id, count(pa)) "
+    @Query("select new com.semo.semoserver.home.dto.SemoCount(pa.semo.id, count(pa)) "
             + "from Participant pa where pa.semo.id in :semoIds group by pa.semo.id")
     List<SemoCount> countParticipants(@Param("semoIds") Collection<Long> semoIds);
 
     // 내가 올린 사진 중 확인이 필요한 사진 수
-    @Query("select new com.semo.server.home.dto.SemoCount(p.semo.id, count(p)) "
+    @Query("select new com.semo.semoserver.home.dto.SemoCount(p.semo.id, count(p)) "
             + "from Photo p where p.participant.guest.id = :guestId and p.matchStatus in :statuses "
             + "group by p.semo.id")
     List<SemoCount> countReviewPhotos(@Param("guestId") Long guestId,

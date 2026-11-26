@@ -20,10 +20,7 @@ public enum ErrorCode {
     INVITE_NOT_FOUND(HttpStatus.NOT_FOUND, "링크를 찾을 수 없어요."),
     DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다."),
     ALREADY_JOINED(HttpStatus.CONFLICT, "이미 참여한 세모입니다."),
-    UNAUTHORIZED_GUEST(HttpStatus.UNAUTHORIZED, "게스트 키가 없거나 올바르지 않습니다."),
-    FORBIDDEN(HttpStatus.FORBIDDEN, "권한이 없습니다."),
-    MOMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "Moment를 찾을 수 없습니다."),
-    PHOTO_NOT_FOUND(HttpStatus.NOT_FOUND, "사진을 찾을 수 없습니다."),
+    FILE_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, "파일 크기가 너무 큽니다."),
 
     // 사진·분석 (A)
     UNSUPPORTED_FILE_TYPE(HttpStatus.BAD_REQUEST, "지원하지 않는 파일 형식입니다."),
