@@ -3,19 +3,18 @@ import closeImg from '../../assets/icons/temp-icon-close.svg'
 
 interface PhotoThumbProps {
   previewUrl: string
-  isHeic: boolean
   disabled?: boolean
   onRemove: () => void
 }
 
-export default function PhotoThumb({ previewUrl, isHeic, disabled, onRemove }: PhotoThumbProps) {
+export default function PhotoThumb({ previewUrl, disabled, onRemove }: PhotoThumbProps) {
   const [failed, setFailed] = useState(false)
   return (
     <div className="relative h-20 w-20">
       <div className="h-full w-full overflow-hidden rounded-[10px] border border-line bg-surface">
         {failed ? (
           <div className="flex h-full w-full items-center justify-center bg-line text-[11px] font-medium text-placeholder">
-            {isHeic ? 'HEIC' : '미리보기 없음'}
+            미리보기 없음
           </div>
         ) : (
           <img

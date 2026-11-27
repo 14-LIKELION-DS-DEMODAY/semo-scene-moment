@@ -1,7 +1,9 @@
 export const semoPath = (semoId: string) => `/semo/${semoId}`
 export const uploadPath = (semoId: string) => `/upload/${semoId}`
-export const analysisPath = (semoId: string) => `/semo/${semoId}/analysis`
-export const matchingPath = (semoId: string) => `/semo/${semoId}/matching`
+export const analysisPath = (semoId: string, uploadId: string) =>
+  `/semo/${semoId}/uploads/${uploadId}/analysis`
+export const matchingPath = (semoId: string, uploadId?: string) =>
+  `/semo/${semoId}/matching${uploadId ? `?uploadId=${uploadId}` : ''}`
 export const manualMatchingPath = (semoId: string) => `/semo/${semoId}/matching/manual`
 export const momentPath = (semoId: string, momentId: string) => `/semo/${semoId}/moments/${momentId}`
 export const photoPath = (semoId: string, momentId: string, photoId: string) =>

@@ -41,7 +41,7 @@ export default function App() {
         {/* 친구 초대 / 참여 / 사진 업로드*/}
         <Route path="/invite/:semoId" element={<InvitePage />} />
         <Route path="/upload/:semoId" element={<UploadPage />} />
-        <Route path="/semo/:semoId/analysis" element={<AnalysisPage />} />
+        <Route path="/semo/:semoId/uploads/:uploadId/analysis" element={<AnalysisPage />} />
         <Route path="/semo/:semoId/matching" element={<ResultPage />} />
         <Route path="/semo/:semoId/matching/manual" element={<ManualPage />} />
         <Route path="/join" element={<JoinCodePage />} />

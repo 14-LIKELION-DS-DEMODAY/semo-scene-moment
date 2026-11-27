@@ -5,18 +5,13 @@ export interface AddResult {
   added: number
   duplicates: number
   rejected: number
+  tooLarge: number
   overflow: number
 }
 
-const HEIC_PATTERN = /\.(heic|heif)$/i
-
-export const isHeic = (file: File) =>
-  HEIC_PATTERN.test(file.name) || /^image\/hei[cf]$/i.test(file.type)
-
-// HEIC는 브라우저에 따라 type이 비어 있어 확장자로도 판단
-function isImage(file: File) {
-  return file.type.startsWith('image/') || isHeic(file)
-}
+// 서버가 받는 형식과 크기
+export const PHOTO_TYPES = ['image/jpeg', 'image/png']
+const PHOTO_MAX_BYTES = 20 * 1024 * 1024
 
 const fileKey = (file: File) => `${file.name}:${file.size}:${file.lastModified}`
 
@@ -35,11 +30,15 @@ export function usePhotoSelection(max: number) {
     (files: File[]): AddResult => {
       const current = photosRef.current
       const keys = new Set(current.map((p) => p.key))
-      const result: AddResult = { added: 0, duplicates: 0, rejected: 0, overflow: 0 }
+      const result: AddResult = { added: 0, duplicates: 0, rejected: 0, tooLarge: 0, overflow: 0 }
       const next = [...current]
       for (const file of files) {
-        if (!isImage(file)) {
+        if (!PHOTO_TYPES.includes(file.type)) {
           result.rejected += 1
+          continue
+        }
+        if (file.size > PHOTO_MAX_BYTES) {
+          result.tooLarge += 1
           continue
         }
         const key = fileKey(file)

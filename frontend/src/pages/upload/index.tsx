@@ -1,40 +1,74 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { uploadPhotos } from '../../api/upload'
+import { ApiError, errorMessage } from '../../api/client'
+import { cancelUpload, completeUpload, startUpload, uploadPhoto } from '../../api/upload'
 import plusImg from '../../assets/icons/photo-plus.svg'
 import Button from '../../components/common/Button'
 import Header from '../../components/common/Header'
 import Toast from '../../components/common/Toast'
 import PhotoThumb from '../../components/semo/PhotoThumb'
-import { isHeic, usePhotoSelection } from '../../hooks/usePhotoSelection'
+import { PHOTO_TYPES, usePhotoSelection } from '../../hooks/usePhotoSelection'
 import type { AddResult } from '../../hooks/usePhotoSelection'
 import { useToast } from '../../hooks/useToast'
 import MobileLayout from '../../layouts/MobileLayout'
 import { afterUploadPath } from '../../utils/routes'
 
 const MAX_PHOTOS = 30
-const NAVIGATE_DELAY_MS = 1200
+const NAVIGATE_DELAY_MS = 1500
+
+// 업로드 자체를 더 진행할 수 없는 에러 (남은 사진도 모두 실패함)
+const STOP_CODES = ['UPLOAD_NOT_FOUND', 'UPLOAD_NOT_IN_PROGRESS', 'FORBIDDEN', 'UNAUTHORIZED_GUEST']
+
+const shouldStop = (error: unknown) => error instanceof ApiError && STOP_CODES.includes(error.code)
+
+// 취소에 실패해도 사용자가 할 수 있는 일이 없어 무시
+const discardUpload = (uploadId: string) => {
+  cancelUpload(uploadId).catch(() => {})
+}
+
+// 전송이 끝난 업로드와 올리지 못한 장수
+interface SentUpload {
+  uploadId: string
+  failed: number
+}
 
 function addMessage(r: AddResult) {
   const parts: string[] = []
   if (r.overflow > 0) parts.push(`최대 ${MAX_PHOTOS}장까지만 담을 수 있어요. ${r.overflow}장은 제외했어요.`)
-  if (r.rejected > 0) parts.push(`사진이 아닌 파일 ${r.rejected}개는 제외했어요.`)
+  if (r.rejected > 0) parts.push(`JPEG, PNG가 아닌 파일 ${r.rejected}개는 제외했어요.`)
+  if (r.tooLarge > 0) parts.push(`20MB가 넘는 사진 ${r.tooLarge}장은 제외했어요.`)
   if (r.duplicates > 0) parts.push(`이미 담은 사진 ${r.duplicates}장은 제외했어요.`)
   return parts.join(' ')
 }
 
 export default function UploadPage() {
-  const { semoId } = useParams<{ semoId: string }>()
+  const { semoId = '' } = useParams<{ semoId: string }>()
   const navigate = useNavigate()
   const { photos, add, remove } = usePhotoSelection(MAX_PHOTOS)
   const [submitting, setSubmitting] = useState(false)
+  // 지금까지 전송을 시도한 장수
+  const [sentCount, setSentCount] = useState(0)
+  // 사진은 다 보냈는데 완료 요청만 실패한 업로드
+  const [pending, setPending] = useState<SentUpload | null>(null)
+  const pendingRef = useRef<SentUpload | null>(null)
+  const runningRef = useRef(false)
+  const leftRef = useRef(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const toast = useToast(2500)
 
-  useEffect(() => () => clearTimeout(timerRef.current), [])
+  useEffect(() => {
+    leftRef.current = false
+    return () => {
+      leftRef.current = true
+      clearTimeout(timerRef.current)
+      // 전송 중이면 보내던 사진이 끝난 뒤 submit에서 취소 (동시에 보내면 사진이 남을 수 있음)
+      if (!runningRef.current && pendingRef.current) discardUpload(pendingRef.current.uploadId)
+    }
+  }, [])
 
+  const locked = submitting || pending !== null
   const full = photos.length >= MAX_PHOTOS
 
   const onPick = (e: ChangeEvent<HTMLInputElement>) => {
@@ -45,29 +79,93 @@ export default function UploadPage() {
     if (message) toast.show(message)
   }
 
-  const submit = async () => {
-    if (!semoId || photos.length === 0 || submitting) return
-    setSubmitting(true)
-    try {
-      const { successCount, failureCount } = await uploadPhotos(
-        semoId,
-        photos.map((p) => p.file),
-      )
-      if (successCount === 0) {
-        toast.show('사진을 올리지 못했어요. 다시 시도해주세요.')
-        setSubmitting(false)
-        return
+  const keepPending = (next: SentUpload | null) => {
+    pendingRef.current = next
+    setPending(next)
+  }
+
+  // 사진을 한 장씩 보냄. 도중에 화면을 나가면 취소하고 null
+  const sendPhotos = async (files: File[]): Promise<SentUpload | null> => {
+    setSentCount(0)
+    const started = await startUpload(semoId, files.length)
+    const uploadId = String(started.uploadId)
+    let failed = 0
+
+    for (const [index, file] of files.entries()) {
+      if (leftRef.current) break
+      try {
+        await uploadPhoto(uploadId, file)
+      } catch (error) {
+        if (shouldStop(error)) throw error
+        failed += 1
       }
-      toast.show(
-        failureCount > 0
-          ? `${successCount}장 올렸고, ${failureCount}장은 올리지 못했어요.`
-          : `${successCount}장을 올렸어요.`,
-      )
-      timerRef.current = setTimeout(() => navigate(afterUploadPath(semoId)), NAVIGATE_DELAY_MS)
-    } catch {
-      toast.show('사진을 올리지 못했어요. 다시 시도해주세요.')
+      setSentCount(index + 1)
+    }
+
+    if (leftRef.current) {
+      discardUpload(uploadId)
+      return null
+    }
+    return { uploadId, failed }
+  }
+
+  const submit = async () => {
+    if (!semoId || photos.length === 0 || runningRef.current) return
+    runningRef.current = true
+    setSubmitting(true)
+
+    const unlock = () => {
+      runningRef.current = false
       setSubmitting(false)
     }
+
+    let sent: SentUpload | null
+    try {
+      sent = pendingRef.current ?? (await sendPhotos(photos.map((p) => p.file)))
+    } catch (error) {
+      toast.show(errorMessage(error))
+      unlock()
+      return
+    }
+    if (!sent) return
+
+    const { uploadId, failed } = sent
+    try {
+      await completeUpload(uploadId)
+    } catch (error) {
+      const noPhoto = error instanceof ApiError && error.code === 'INVALID_INPUT'
+      if (noPhoto || leftRef.current) {
+        discardUpload(uploadId)
+        keepPending(null)
+        toast.show('사진을 한 장도 올리지 못했어요. 다시 시도해주세요.')
+      } else if (shouldStop(error)) {
+        keepPending(null)
+        toast.show(errorMessage(error))
+      } else {
+        keepPending(sent)
+        toast.show(`${errorMessage(error)} 버튼을 눌러 다시 시도해주세요.`)
+      }
+      unlock()
+      return
+    }
+
+    pendingRef.current = null
+    if (leftRef.current) return
+
+    // 이동할 때까지 잠금 유지
+    const goAnalysis = () => navigate(afterUploadPath(semoId, uploadId), { replace: true })
+    if (failed === 0) return goAnalysis()
+    toast.show(`${failed}장은 올리지 못했어요.`)
+    timerRef.current = setTimeout(goAnalysis, NAVIGATE_DELAY_MS)
+  }
+
+  const buttonLabel = () => {
+    if (submitting) {
+      return pending === null && sentCount < photos.length
+        ? `올리는 중... ${sentCount}/${photos.length}`
+        : '분석 요청 중...'
+    }
+    return pending === null ? '선택한 사진 올리기' : '분석 다시 요청'
   }
 
   return (
@@ -90,7 +188,7 @@ export default function UploadPage() {
             <button
               type="button"
               aria-label="사진 추가"
-              disabled={full || submitting}
+              disabled={full || locked}
               onClick={() => inputRef.current?.click()}
               className="flex h-20 w-20 items-center justify-center rounded-[10px] border border-line bg-surface disabled:opacity-40"
             >
@@ -100,8 +198,7 @@ export default function UploadPage() {
               <PhotoThumb
                 key={p.key}
                 previewUrl={p.previewUrl}
-                isHeic={isHeic(p.file)}
-                disabled={submitting}
+                disabled={locked}
                 onRemove={() => remove(p.key)}
               />
             ))}
@@ -110,15 +207,19 @@ export default function UploadPage() {
         <input
           ref={inputRef}
           type="file"
-          accept="image/*,.heic,.heif"
+          accept={PHOTO_TYPES.join(',')}
           multiple
           hidden
           onChange={onPick}
         />
 
         <div className="mt-auto pb-[50px] pt-10">
-          <Button disabled={photos.length === 0 || submitting} onClick={submit}>
-            선택한 사진 올리기
+          <Button
+            disabled={photos.length === 0 || submitting}
+            aria-busy={submitting}
+            onClick={submit}
+          >
+            {buttonLabel()}
           </Button>
         </div>
       </div>

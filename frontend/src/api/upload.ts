@@ -1,32 +1,31 @@
-import type { AnalysisStatus, UploadPhotosResult } from '../types/upload'
+import type { PhotoUploadResponse, UploadStartResponse, UploadState } from '../types/upload'
+import { api } from './client'
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+const uploadApiPath = (uploadId: string) => `/api/uploads/${encodeURIComponent(uploadId)}`
 
-const ANALYSIS_DURATION_MS = 4000
-const analysisStartedAt = new Map<string, number>()
+export const startUpload = (semoId: string, totalCount: number) =>
+  api<UploadStartResponse>(`/api/semos/${encodeURIComponent(semoId)}/uploads`, {
+    method: 'POST',
+    body: { totalCount },
+  })
 
-// TODO: 실제 API 연동 시 교체. files는 원본 File 그대로 FormData에 담는다(EXIF 보존을 위해 가공 금지).
-export async function uploadPhotos(semoId: string, files: File[]): Promise<UploadPhotosResult> {
+/** 촬영 시각·위치를 서버가 읽어야 하므로 원본 File을 그대로 보낸다 (압축·변환 금지) */
+export function uploadPhoto(uploadId: string, file: File) {
   const form = new FormData()
-  files.forEach((file) => form.append('photos', file))
-  void form
-  await delay(1000)
-  analysisStartedAt.set(semoId, Date.now())
-  return { successCount: files.length, failureCount: 0 }
+  form.append('file', file)
+  return api<PhotoUploadResponse>(`${uploadApiPath(uploadId)}/photos`, {
+    method: 'POST',
+    body: form,
+  })
 }
 
-// TODO: 실제 API 연동 시 교체. 목데이터는 시작 후 몇 초 뒤 완료로 응답한다.
-export async function getAnalysisStatus(semoId: string): Promise<AnalysisStatus> {
-  await delay(200)
-  const startedAt = analysisStartedAt.get(semoId)
-  if (startedAt === undefined) {
-    analysisStartedAt.set(semoId, Date.now())
-    return 'ANALYZING'
-  }
-  return Date.now() - startedAt >= ANALYSIS_DURATION_MS ? 'DONE' : 'ANALYZING'
-}
+export const completeUpload = (uploadId: string) =>
+  api<UploadState>(`${uploadApiPath(uploadId)}/complete`, { method: 'POST' })
 
-export async function cancelAnalysis(semoId: string): Promise<void> {
-  await delay(200)
-  analysisStartedAt.delete(semoId)
-}
+export const getUpload = (uploadId: string) => api<UploadState>(uploadApiPath(uploadId))
+
+export const retryUpload = (uploadId: string) =>
+  api<UploadState>(`${uploadApiPath(uploadId)}/retry`, { method: 'POST' })
+
+export const cancelUpload = (uploadId: string) =>
+  api<UploadState>(`${uploadApiPath(uploadId)}/cancel`, { method: 'POST' })
