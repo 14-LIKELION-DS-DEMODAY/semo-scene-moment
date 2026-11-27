@@ -3,40 +3,37 @@ import { useNavigate } from 'react-router-dom';
 import MomentWaveChart from '../../components/semo/MomentWaveChart';
 import { formatKoreanDate } from '../../utils/wave';
 import { momentPath } from '../../utils/routes';
-import type { Moment } from '../../types/moment';
+import type { WaveMoment } from '../../api/moment';
 import chevronRightIcon from '../../assets/icons/icon-chevron-right.svg';
 
 /**
  * 세모 상세 - 사진이 있는 상태
  * - 날짜 필터 알약 버튼 + 파형 차트 + "선택한 순간" 카드
- * - 상태는 2개: selectedDate, selectedMomentId
+ * - 날짜가 바뀌면 부모가 그 날짜의 Moment를 다시 조회해서 넘겨줌
  */
 interface WaveSemoViewProps {
   semoId: string;
-  moments: Moment[];
+  dates: string[];
+  selectedDate: string;
+  onSelectDate: (date: string) => void;
+  /** 선택한 날짜의 Moment (시간순) */
+  moments: WaveMoment[];
 }
 
-export default function WaveSemoView({ semoId, moments }: WaveSemoViewProps) {
+export default function WaveSemoView({
+  semoId,
+  dates,
+  selectedDate,
+  onSelectDate,
+  moments,
+}: WaveSemoViewProps) {
   const navigate = useNavigate();
-  // 날짜 목록 (중복 제거, 등장 순서 유지)
-  const dates = Array.from(new Set(moments.map((m) => m.date)));
-
-  const [selectedDate, setSelectedDate] = useState(dates[0]);
   const [selectedMomentId, setSelectedMomentId] = useState<string | null>(null);
-
-  // 선택한 날짜의 Moment만 파형에 표시
-  const dayMoments = moments.filter((m) => m.date === selectedDate);
 
   // 선택된 Moment: 직접 고른 게 없으면 사진이 가장 많은 Moment가 기본값
   const selectedMoment =
-    dayMoments.find((m) => m.id === selectedMomentId) ??
-    dayMoments.reduce((max, m) => (m.photoCount > max.photoCount ? m : max), dayMoments[0]);
-
-  // 날짜를 바꾸면 선택된 Moment 초기화 (→ 기본값으로 복귀)
-  const handleSelectDate = (date: string) => {
-    setSelectedDate(date);
-    setSelectedMomentId(null);
-  };
+    moments.find((m) => m.id === selectedMomentId) ??
+    moments.reduce((max, m) => (m.photoCount > max.photoCount ? m : max), moments[0]);
 
   return (
     <div className="flex flex-col">
@@ -46,7 +43,7 @@ export default function WaveSemoView({ semoId, moments }: WaveSemoViewProps) {
           <button
             key={date}
             type="button"
-            onClick={() => handleSelectDate(date)}
+            onClick={() => onSelectDate(date)}
             className={`shrink-0 rounded-[12px] px-[16px] py-[6px] text-[11px] font-medium leading-[1.2] ${
               date === selectedDate ? 'bg-[#346E90] text-[#F4F8FA]' : 'bg-[#DDEEF5] text-[#346E90]'
             }`}
@@ -59,7 +56,7 @@ export default function WaveSemoView({ semoId, moments }: WaveSemoViewProps) {
       {/* 파형 (피그마 카드 폭 370px: 좌우 여백 16px) */}
       <div className="-mx-2 mt-[28px]">
         <MomentWaveChart
-          moments={dayMoments}
+          moments={moments}
           selectedId={selectedMoment.id}
           onSelect={setSelectedMomentId}
         />

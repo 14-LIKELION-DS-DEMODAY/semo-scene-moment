@@ -1,10 +1,10 @@
 import MobileLayout from '../../layouts/MobileLayout';
 import Header from '../../components/common/Header';
+import StatusView from '../../components/common/StatusView';
 import HomeEmptyView from './HomeEmptyView';
 import HomeContentView from './HomeContentView';
-import { MOCK_SEMOS } from '../../api/mockSemos';
-import type { SemoItem } from '../../types/semo';
-import { NICKNAME_KEY } from '../../utils/storage';
+import { getHome } from '../../api/home';
+import { useApi } from '../../hooks/useApi';
 
 /**
  * 홈 페이지 (/home)
@@ -12,19 +12,21 @@ import { NICKNAME_KEY } from '../../utils/storage';
  * - 참여 중인 세모가 없으면 HomeEmptyView, 있으면 HomeContentView 렌더링
  */
 export default function HomePage() {
-  // TODO: 백엔드 연동 시 API 응답으로 교체
-  const semoList: SemoItem[] = MOCK_SEMOS;
-
-  // TODO: 닉네임 저장 방식 확정 후 교체 (현재는 로컬스토리지)
-  const nickname = localStorage.getItem(NICKNAME_KEY) ?? '여진';
+  const { data: home, error, reload } = useApi('home', getHome);
 
   return (
     <MobileLayout hasBottomNav bottomNavType="main">
       <Header variant="logo" />
-      {semoList.length === 0 ? (
+      {error || !home ? (
+        <StatusView error={error} onRetry={reload} />
+      ) : home.semos.length === 0 ? (
         <HomeEmptyView />
       ) : (
-        <HomeContentView nickname={nickname} semoList={semoList} />
+        <HomeContentView
+          nickname={home.nickname}
+          semoList={home.semos}
+          recentSemo={home.recentSemo}
+        />
       )}
     </MobileLayout>
   );

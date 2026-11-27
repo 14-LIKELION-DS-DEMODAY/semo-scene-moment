@@ -1,17 +1,27 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import MobileLayout from '../../layouts/MobileLayout';
 import Header from '../../components/common/Header';
 import CommentInput from '../../components/photo/CommentInput';
 import CommentSheet from '../../components/photo/CommentSheet';
 import PhotoMenuSheet from '../../components/photo/PhotoMenuSheet';
 import ConfirmModal from '../../components/common/ConfirmModal';
-import { MOCK_MOMENTS } from '../../api/mockMoments';
-import { getMomentPhotos, getPhotoComments } from '../../api/mockPhotos';
+import StatusView from '../../components/common/StatusView';
+import Toast from '../../components/common/Toast';
+import { getMoment, type MomentDetail } from '../../api/moment';
+import {
+  addComment,
+  deletePhoto,
+  getComments,
+  getPhoto,
+  setPhotoLike,
+  type PhotoDetail,
+} from '../../api/photo';
+import { errorMessage } from '../../api/client';
+import { useApi } from '../../hooks/useApi';
+import { useToast } from '../../hooks/useToast';
 import { formatPhotoDate } from '../../utils/photo';
-import { photoPath } from '../../utils/routes';
-import { NICKNAME_KEY } from '../../utils/storage';
-import type { Photo, PhotoComment } from '../../types/photo';
+import { momentPath, photoPath, semoPath } from '../../utils/routes';
 import dotsIcon from '../../assets/icons/icon-dots.svg';
 import heartIcon from '../../assets/icons/icon-heart.svg';
 import heartFilledIcon from '../../assets/icons/icon-heart-filled.svg';
@@ -23,60 +33,91 @@ import caretIcon from '../../assets/icons/icon-caret-right-small.svg';
  * 사진 보기 페이지 (/semo/:semoId/moments/:momentId/photos/:photoId)
  * - 정사각형 사진 + 좋아요 / 댓글 수 / 올린 사람 / 댓글 미리보기 / 댓글 입력
  * - 사진을 누르면 "원본 비율" 보기로 전환 (하단에 사진 썸네일 목록)
- * - 좌우 화살표로 같은 Moment의 이전 / 다음 사진 이동
+ * - 좌우 화살표로 같은 Moment의 이전 / 다음 사진 이동 (서버 기준으로 순환)
  * - ⋯ 버튼: 사진 설정 시트, "모두 보기": 댓글 모두보기 시트
  */
 interface PhotoViewProps {
   semoId: string;
   momentId: string;
-  photos: Photo[];
-  index: number;
+  photo: PhotoDetail;
+  /** 원본 비율 보기에서 보여줄 같은 Moment의 사진 목록 */
+  thumbnails: MomentDetail['photos'];
   /** 원본 비율 보기 여부 (사진을 넘겨도 유지되도록 부모에서 관리) */
   original: boolean;
   onToggleOriginal: () => void;
+  onGoTo: (photoId: number) => void;
+  /** 댓글이 바뀐 뒤 사진 정보를 다시 조회 */
+  onChanged: () => void;
 }
 
-function PhotoView({ semoId, momentId, photos, index, original, onToggleOriginal }: PhotoViewProps) {
+function PhotoView({
+  semoId,
+  momentId,
+  photo,
+  thumbnails,
+  original,
+  onToggleOriginal,
+  onGoTo,
+  onChanged,
+}: PhotoViewProps) {
   const navigate = useNavigate();
-  const photo = photos[index];
+  const toast = useToast();
+  const photoId = String(photo.photoId);
 
-  // TODO: 닉네임 저장 방식 확정 후 교체 (현재는 로컬스토리지)
-  const nickname = localStorage.getItem(NICKNAME_KEY) ?? '여진';
-  const isMine = photo.uploaderName === nickname;
-
-  // TODO: 좋아요 / 댓글 API 연동 (지금은 이 화면 안에서만 바뀜)
-  const [liked, setLiked] = useState(false);
-  const [comments, setComments] = useState<PhotoComment[]>(() => getPhotoComments(photo));
+  const [like, setLike] = useState({ liked: photo.liked, likeCount: photo.likeCount });
   const [draft, setDraft] = useState('');
+  const [busy, setBusy] = useState(false);
 
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const likeCount = photo.likeCount + (liked ? 1 : 0);
+  // 전체 댓글은 "모두 보기"를 열었을 때 조회 (댓글 수가 바뀌면 다시 조회)
+  const allComments = useApi(`comments:${commentsOpen}:${photo.commentCount}`, () =>
+    commentsOpen ? getComments(photoId) : Promise.resolve(undefined),
+  );
 
-  const goTo = (nextIndex: number) => {
-    navigate(photoPath(semoId, momentId, photos[nextIndex].id), { replace: true });
+  const hasOthers = photo.nextPhotoId !== null && photo.nextPhotoId !== photo.photoId;
+
+  /** 서버에 변경을 보내는 동안 중복 요청을 막고, 실패하면 알려줌 */
+  const run = async (task: () => Promise<void>) => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await task();
+    } catch (e) {
+      toast.show(errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
   };
+
+  const handleToggleLike = () =>
+    run(async () => setLike(await setPhotoLike(photoId, !like.liked)));
 
   const handleSubmitComment = () => {
     const text = draft.trim();
     if (!text) return;
-    setComments((prev) => [
-      ...prev,
-      { id: `new-${Date.now()}`, author: nickname, text, createdAt: new Date().toISOString() },
-    ]);
-    setDraft('');
+    run(async () => {
+      await addComment(photoId, text);
+      setDraft('');
+      onChanged();
+    });
   };
 
+  // 이미지 서버 주소가 달라서, 받아온 뒤에 저장해야 파일로 내려받아짐
   const handleSave = () => {
-    if (photo.url) {
-      const link = document.createElement('a');
-      link.href = photo.url;
-      link.download = `${photo.id}.jpg`;
-      link.click();
-    }
     setMenuOpen(false);
+    run(async () => {
+      const response = await fetch(photo.downloadUrl);
+      if (!response.ok) throw new Error('DOWNLOAD_FAILED');
+      const url = URL.createObjectURL(await response.blob());
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = photo.downloadUrl.split('/').pop() || `photo-${photoId}.jpg`;
+      link.click();
+      URL.revokeObjectURL(url);
+    });
   };
 
   // TODO: 다른 Moment로 이동 화면 확정 후 연결
@@ -88,8 +129,14 @@ function PhotoView({ semoId, momentId, photos, index, original, onToggleOriginal
     setDeleteOpen(true);
   };
 
-  // TODO: 사진 삭제 API 연동 후 Moment 상세로 이동
-  const handleConfirmDelete = () => setDeleteOpen(false);
+  // 마지막 사진이라 Moment가 사라지면 세모 보기로, 아니면 Moment 상세로
+  const handleConfirmDelete = () => {
+    setDeleteOpen(false);
+    run(async () => {
+      const { momentDeleted } = await deletePhoto(photoId);
+      navigate(momentDeleted ? semoPath(semoId) : momentPath(semoId, momentId), { replace: true });
+    });
+  };
 
   return (
     <MobileLayout>
@@ -118,28 +165,28 @@ function PhotoView({ semoId, momentId, photos, index, original, onToggleOriginal
         >
           {original ? (
             <div className="flex h-[556px] w-full items-center justify-center">
-              <img src={photo.url} alt="" className="max-h-full max-w-full object-contain" />
+              <img src={photo.imageUrl} alt="" className="max-h-full max-w-full object-contain" />
             </div>
           ) : (
-            <img src={photo.url} alt="" className="h-[402px] w-full object-cover" />
+            <img src={photo.imageUrl} alt="" className="h-[402px] w-full object-cover" />
           )}
         </button>
 
-        {index > 0 && (
+        {hasOthers && photo.prevPhotoId !== null && (
           <button
             type="button"
             aria-label="이전 사진"
-            onClick={() => goTo(index - 1)}
+            onClick={() => onGoTo(photo.prevPhotoId!)}
             className="absolute left-3 top-[189px] h-6 w-6 rotate-180"
           >
             <img src={slideIcon} alt="" className="h-6 w-6" />
           </button>
         )}
-        {index < photos.length - 1 && (
+        {hasOthers && (
           <button
             type="button"
             aria-label="다음 사진"
-            onClick={() => goTo(index + 1)}
+            onClick={() => onGoTo(photo.nextPhotoId!)}
             className="absolute right-3 top-[189px] h-6 w-6"
           >
             <img src={slideIcon} alt="" className="h-6 w-6" />
@@ -150,17 +197,17 @@ function PhotoView({ semoId, momentId, photos, index, original, onToggleOriginal
       {original ? (
         /* 원본 비율: 같은 Moment의 사진 썸네일 목록 */
         <div className="mt-[75px] flex gap-[10px] overflow-x-auto px-6 pb-6 [scrollbar-width:none]">
-          {photos.map((item, i) => (
+          {thumbnails.map((item) => (
             <button
-              key={item.id}
+              key={item.photoId}
               type="button"
               aria-label="사진 선택"
-              onClick={() => goTo(i)}
+              onClick={() => onGoTo(item.photoId)}
               className={`h-[80px] w-[80px] shrink-0 overflow-hidden rounded-[10px] border bg-[#F7FAFC] ${
-                i === index ? 'border-[#3B7797]' : 'border-[#DFE9EE]'
+                item.photoId === photo.photoId ? 'border-[#3B7797]' : 'border-[#DFE9EE]'
               }`}
             >
-              {item.url && <img src={item.url} alt="" className="h-full w-full object-cover" />}
+              <img src={item.thumbnailUrl} alt="" className="h-full w-full object-cover" />
             </button>
           ))}
         </div>
@@ -171,12 +218,12 @@ function PhotoView({ semoId, momentId, photos, index, original, onToggleOriginal
             <button
               type="button"
               aria-label="좋아요"
-              aria-pressed={liked}
-              onClick={() => setLiked((prev) => !prev)}
+              aria-pressed={like.liked}
+              onClick={handleToggleLike}
               className="flex items-center gap-[10px]"
             >
-              <img src={liked ? heartFilledIcon : heartIcon} alt="" className="h-6 w-6" />
-              <span className="text-[14px] font-medium leading-[1.2] text-black">{likeCount}</span>
+              <img src={like.liked ? heartFilledIcon : heartIcon} alt="" className="h-6 w-6" />
+              <span className="text-[14px] font-medium leading-[1.2] text-black">{like.likeCount}</span>
             </button>
             <button
               type="button"
@@ -186,7 +233,7 @@ function PhotoView({ semoId, momentId, photos, index, original, onToggleOriginal
             >
               <img src={chatIcon} alt="" className="h-6 w-6" />
               <span className="text-[14px] font-medium leading-[1.2] text-black">
-                {comments.length}
+                {photo.commentCount}
               </span>
             </button>
           </div>
@@ -194,20 +241,20 @@ function PhotoView({ semoId, momentId, photos, index, original, onToggleOriginal
           {/* 올린 사람 */}
           <div className="mt-[19px] flex items-center border-t-2 border-[#DFE9EE] pt-[19px]">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[20px] bg-[#DDEEF5] text-[12px] font-bold leading-[1.2] text-[#244C62]">
-              {photo.uploaderName}
+              {photo.uploader.nickname.slice(0, 3)}
             </div>
             <span className="ml-[17px] text-[15px] font-semibold leading-[1.2] text-black">
-              {photo.uploaderName}의 시선
+              {photo.uploader.nickname}의 시선
             </span>
             <span className="ml-auto text-[10px] font-medium leading-[1.2] text-[#6B9FBD]">
-              {formatPhotoDate(photo.takenAt)}
+              {photo.takenAt ? formatPhotoDate(photo.takenAt) : ''}
             </span>
           </div>
 
           {/* 댓글 미리보기 */}
           <div className="mt-[19px] flex items-center justify-between border-t-2 border-[#DFE9EE] pt-[23px]">
             <span className="text-[15px] font-semibold leading-[1.2] text-black">
-              댓글 {comments.length}
+              댓글 {photo.commentCount}
             </span>
             <button
               type="button"
@@ -219,9 +266,9 @@ function PhotoView({ semoId, momentId, photos, index, original, onToggleOriginal
             </button>
           </div>
           <ul className="mt-5 flex flex-col gap-[15.6px] text-[12px] leading-[1.2] text-black">
-            {comments.slice(0, 2).map((comment) => (
+            {photo.recentComments.map((comment) => (
               <li key={comment.id} className="flex">
-                <span className="w-9 shrink-0 font-semibold">{comment.author}</span>
+                <span className="min-w-9 shrink-0 pr-[6px] font-semibold">{comment.author}</span>
                 <span className="truncate">{comment.text}</span>
               </li>
             ))}
@@ -236,7 +283,8 @@ function PhotoView({ semoId, momentId, photos, index, original, onToggleOriginal
 
       <CommentSheet
         open={commentsOpen}
-        comments={comments}
+        count={photo.commentCount}
+        comments={allComments.data ?? []}
         draft={draft}
         onDraftChange={setDraft}
         onSubmit={handleSubmitComment}
@@ -244,7 +292,7 @@ function PhotoView({ semoId, momentId, photos, index, original, onToggleOriginal
       />
       <PhotoMenuSheet
         open={menuOpen}
-        isMine={isMine}
+        isMine={photo.isMine}
         onClose={() => setMenuOpen(false)}
         onMove={handleMove}
         onSave={handleSave}
@@ -257,42 +305,65 @@ function PhotoView({ semoId, momentId, photos, index, original, onToggleOriginal
         onCancel={() => setDeleteOpen(false)}
         onConfirm={handleConfirmDelete}
       />
+      <Toast message={toast.message} />
     </MobileLayout>
   );
 }
 
 export default function PhotoPage() {
-  const { semoId, momentId, photoId } = useParams<{
-    semoId: string;
-    momentId: string;
-    photoId: string;
-  }>();
-
-  // TODO: 백엔드 연동 시 API로 조회
-  const moment = (semoId ? MOCK_MOMENTS[semoId] : undefined)?.find((m) => m.id === momentId);
-  const photos = moment ? getMomentPhotos(moment) : [];
-  const index = photos.findIndex((p) => p.id === photoId);
+  const {
+    semoId = '',
+    momentId = '',
+    photoId = '',
+  } = useParams<{ semoId: string; momentId: string; photoId: string }>();
+  const [searchParams] = useSearchParams();
+  const participantId = searchParams.get('participantId') ?? undefined;
+  const navigate = useNavigate();
   const [original, setOriginal] = useState(false);
 
-  if (!semoId || !momentId || !moment || index < 0) {
+  const { data: photo, error, reload } = useApi(`photo:${photoId}:${participantId ?? ''}`, () =>
+    getPhoto(photoId, participantId),
+  );
+  // 원본 비율 보기의 썸네일 목록
+  const strip = useApi(`strip:${original}:${momentId}`, () =>
+    original ? getMoment(momentId) : Promise.resolve(undefined),
+  );
+
+  if (error || !photo) {
     return (
       <MobileLayout>
         <Header variant="back" title="사진 보기" />
-        <p className="py-24 text-center text-xs text-gray-400">사진을 찾을 수 없어요.</p>
+        <StatusView error={error} onRetry={reload} />
       </MobileLayout>
     );
   }
 
-  // 사진이 바뀌면 좋아요 / 댓글 상태가 초기화되도록 key 지정
+  const goTo = (nextId: number) => {
+    navigate(
+      {
+        pathname: photoPath(semoId, momentId, String(nextId)),
+        search: participantId ? `?participantId=${participantId}` : '',
+      },
+      { replace: true },
+    );
+  };
+
+  const thumbnails = (strip.data?.photos ?? []).filter(
+    (p) => !participantId || String(p.participantId) === participantId,
+  );
+
+  // 사진이 바뀌면 좋아요 / 입력 중인 댓글 상태가 초기화되도록 key 지정
   return (
     <PhotoView
-      key={photos[index].id}
+      key={photo.photoId}
       semoId={semoId}
       momentId={momentId}
-      photos={photos}
-      index={index}
+      photo={photo}
+      thumbnails={thumbnails}
       original={original}
       onToggleOriginal={() => setOriginal((prev) => !prev)}
+      onGoTo={goTo}
+      onChanged={reload}
     />
   );
 }

@@ -14,9 +14,9 @@ export interface SemoItem {
   role: SemoRole;
   thumbnailUrl?: string;
   /** 정렬용: 생성 시각 (ISO 문자열) */
-  createdAt: string;
+  createdAt?: string;
   /** 정렬용: 마지막 활동 시각 (ISO 문자열) */
-  lastActivityAt: string;
+  lastActivityAt?: string;
 }
 
 

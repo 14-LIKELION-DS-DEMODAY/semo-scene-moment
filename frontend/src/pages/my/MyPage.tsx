@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import MobileLayout from '../../layouts/MobileLayout';
 import Header from '../../components/common/Header';
-import { MOCK_SEMOS } from '../../api/mockSemos';
+import { getMe } from '../../api/home';
+import { useApi } from '../../hooks/useApi';
 import chevronRightIcon from '../../assets/icons/icon-chevron-right.svg';
 
 /**
@@ -49,8 +50,10 @@ export default function MyPage() {
   const navigate = useNavigate();
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  // TODO: 백엔드 연동 시 API 응답으로 교체 (HomePage와 같은 기준으로 신규 여부 판단)
-  const isNewUser = MOCK_SEMOS.length === 0;
+  // 조회에 실패하면 전체 메뉴를 보여줌 (기록 삭제는 서버 없이도 할 수 있어야 함)
+  const { data: me, error } = useApi('me', getMe);
+  const isLoading = !me && !error;
+  const isNewUser = me?.hasSemo === false;
 
   // TODO: 닉네임 변경 화면/모달 라우트 확정 후 연결
   const handleChangeNickname = () => navigate('/my/nickname');
@@ -70,7 +73,7 @@ export default function MyPage() {
       <div className="flex flex-col gap-[30px] px-6 pb-6 pt-[30px]">
         <h2 className="text-[26px] font-bold leading-[1.2] text-black">마이페이지</h2>
 
-        {isNewUser ? (
+        {isLoading ? null : isNewUser ? (
           // 신규: 이용 안내만
           <div className="-mt-[10px]">
             <MenuItem label="사진 공개 범위 및 이용 안내" onClick={handleOpenGuide} />

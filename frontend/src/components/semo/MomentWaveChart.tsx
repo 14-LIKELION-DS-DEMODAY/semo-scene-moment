@@ -1,9 +1,9 @@
-import type { Moment } from '../../types/moment';
-import { getWaveLevel, WAVE_HEIGHT } from '../../utils/wave';
+import type { WaveMoment } from '../../api/moment';
+import { WAVE_MAX_HEIGHT } from '../../utils/wave';
 
 /**
  * 순간 파형 차트 (피그마: 370 x 351, radius 18, border #DFE9EE, bg #FAFCFD)
- * - 사진 수(1~5단계)만큼 높이가 다른 꼭짓점을 부드러운 곡선으로 연결
+ * - 서버가 준 waveHeight만큼 높이가 다른 꼭짓점을 부드러운 곡선으로 연결
  * - 모든 꼭짓점 아래에 점선, 맨 아래에 바닥선, 라벨은 전부 #346E90
  * - 꼭짓점 또는 라벨을 누르면 onSelect(momentId) 호출
  *
@@ -12,7 +12,7 @@ import { getWaveLevel, WAVE_HEIGHT } from '../../utils/wave';
  * 양옆 꼭짓점 중 낮은 쪽의 일부 높이에 머물러 피그마처럼 이어지는 형태가 됩니다.
  */
 interface MomentWaveChartProps {
-  moments: Moment[];
+  moments: WaveMoment[];
   selectedId: string;
   onSelect: (id: string) => void;
 }
@@ -61,7 +61,7 @@ export default function MomentWaveChart({ moments, selectedId, onSelect }: Momen
   );
 
   // 꼭짓점 높이(px)와 좌표
-  const heights = moments.map((m) => WAVE_HEIGHT[getWaveLevel(m.photoCount)]);
+  const heights = moments.map((m) => m.waveHeight * WAVE_MAX_HEIGHT);
   const peaks: Point[] = heights.map((h, i) => ({ x: peakX[i], y: BASE_Y - h }));
 
   // 경로: 왼쪽 시작 → (꼭짓점 → 골짜기)* → 오른쪽 끝
