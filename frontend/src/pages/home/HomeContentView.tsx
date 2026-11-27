@@ -10,8 +10,11 @@ import chevronRightIcon from '../../assets/icons/icon-chevron-right.svg';
  * - 인사말 / 액션 카드 2개 / 참여 중인 세모(최대 2개) / 이어서 보기(최근 1개)
  */
 interface HomeContentViewProps {
-  nickname: string;
+  /** 기본 닉네임 (아직 없으면 null) */
+  nickname: string | null;
   semoList: SemoItem[];
+  /** 이어서 보기 */
+  recentSemo: SemoItem | null;
 }
 
 /** 섹션 제목(18px) + "전체보기 >" 링크(#447F9F, 12px) */
@@ -31,15 +34,11 @@ function SectionHeader({ title, onMore }: { title: string; onMore: () => void })
   );
 }
 
-export default function HomeContentView({ nickname, semoList }: HomeContentViewProps) {
+export default function HomeContentView({ nickname, semoList, recentSemo }: HomeContentViewProps) {
   const navigate = useNavigate();
 
   // 참여 중인 세모: 최대 2개만 노출
   const joinedList = semoList.slice(0, 2);
-  // 이어서 보기: 마지막 활동이 가장 최근인 세모 1개
-  const recentSemo = [...semoList].sort(
-    (a, b) => new Date(b.lastActivityAt).getTime() - new Date(a.lastActivityAt).getTime(),
-  )[0];
 
   return (
     <div className="flex flex-col gap-[30px] px-6 pb-6 pt-[30px]">
@@ -47,7 +46,7 @@ export default function HomeContentView({ nickname, semoList }: HomeContentViewP
       <div className="flex flex-col gap-[30px]">
         <div className="flex flex-col gap-[10px]">
           <h2 className="text-[26px] font-bold leading-[1.2] text-black">
-            {nickname}님, 반갑습니다!
+            {nickname ? `${nickname}님, 반갑습니다!` : '반갑습니다!'}
           </h2>
           <p className="text-[13px] leading-[1.2] text-[#ACACAC]">함께한 순간들을 다시 만나볼까요?</p>
         </div>

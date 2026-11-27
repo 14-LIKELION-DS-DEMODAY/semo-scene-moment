@@ -1,55 +1,46 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MobileLayout from '../../layouts/MobileLayout';
 import Header from '../../components/common/Header';
 import SemoCard from '../../components/semo/SemoCard';
-import { MOCK_SEMOS } from '../../api/mockSemos';
-import type { SemoItem } from '../../types/semo';
+import StatusView from '../../components/common/StatusView';
+import { getSemoList, type SemoSort } from '../../api/home';
+import { useApi } from '../../hooks/useApi';
 import searchIcon from '../../assets/icons/icon-search.svg';
 import chevronDownIcon from '../../assets/icons/icon-chevron-down.svg';
 
 /**
  * 참여 중인 세모 전체보기 (/semo)
- * - 검색: 세모 이름으로 실시간 필터링
+ * - 검색: 세모 이름 (입력이 잠깐 멈추면 서버에서 검색)
  * - 정렬: 활동순 / 생성순 / 날짜순 드롭다운
  */
-type SortType = 'latest' | 'created' | 'date';
-
-const SORT_OPTIONS: { value: SortType; label: string }[] = [
-  { value: 'latest', label: '활동순' },
-  { value: 'created', label: '생성순' },
-  { value: 'date', label: '날짜순' },
+const SORT_OPTIONS: { value: SemoSort; label: string }[] = [
+  { value: 'ACTIVITY', label: '활동순' },
+  { value: 'CREATED', label: '생성순' },
+  { value: 'DATE', label: '날짜순' },
 ];
-
-const time = (iso: string) => new Date(iso).getTime();
-
-/** 정렬 기준별 비교 함수 (모두 최신이 위로) */
-const SORTERS: Record<SortType, (a: SemoItem, b: SemoItem) => number> = {
-  latest: (a, b) => time(b.lastActivityAt) - time(a.lastActivityAt),
-  created: (a, b) => time(b.createdAt) - time(a.createdAt),
-  date: (a, b) => b.date.localeCompare(a.date),
-};
 
 export default function SemoListPage() {
   const navigate = useNavigate();
 
-  // TODO: 백엔드 연동 시 API 응답으로 교체
-  const semoList: SemoItem[] = MOCK_SEMOS;
-
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortType, setSortType] = useState<SortType>('latest');
+  const [keyword, setKeyword] = useState('');
+  const [sortType, setSortType] = useState<SemoSort>('ACTIVITY');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const visibleList = useMemo(() => {
-    const keyword = searchQuery.trim().toLowerCase();
-    return semoList
-      .filter((semo) => semo.title.toLowerCase().includes(keyword))
-      .sort(SORTERS[sortType]);
-  }, [semoList, searchQuery, sortType]);
+  // 글자를 칠 때마다 요청하지 않도록 300ms 멈추면 검색
+  useEffect(() => {
+    const timer = setTimeout(() => setKeyword(searchQuery.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const { data: semoList, error, reload } = useApi(`semos:${sortType}:${keyword}`, () =>
+    getSemoList(keyword, sortType),
+  );
 
   const currentLabel = SORT_OPTIONS.find((o) => o.value === sortType)?.label;
 
-  const handleSelectSort = (value: SortType) => {
+  const handleSelectSort = (value: SemoSort) => {
     setSortType(value);
     setIsDropdownOpen(false);
   };
@@ -117,11 +108,15 @@ export default function SemoListPage() {
         </div>
 
         {/* 리스트 */}
-        {visibleList.length === 0 ? (
-          <p className="py-16 text-center text-xs text-gray-400">검색 결과가 없어요.</p>
+        {error || !semoList ? (
+          <StatusView error={error} onRetry={reload} />
+        ) : semoList.length === 0 ? (
+          <p className="py-16 text-center text-xs text-gray-400">
+            {keyword ? '검색 결과가 없어요.' : '아직 참여 중인 세모가 없어요.'}
+          </p>
         ) : (
           <div className="flex flex-col gap-[10px]">
-            {visibleList.map((semo) => (
+            {semoList.map((semo) => (
               <SemoCard
                 key={semo.id}
                 semo={semo}

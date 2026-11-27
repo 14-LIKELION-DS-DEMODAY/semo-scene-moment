@@ -9,6 +9,8 @@ import type { PhotoComment } from '../../types/photo';
  */
 interface CommentSheetProps {
   open: boolean;
+  /** 전체 댓글 수 */
+  count: number;
   comments: PhotoComment[];
   draft: string;
   onDraftChange: (value: string) => void;
@@ -18,6 +20,7 @@ interface CommentSheetProps {
 
 export default function CommentSheet({
   open,
+  count,
   comments,
   draft,
   onDraftChange,
@@ -27,7 +30,7 @@ export default function CommentSheet({
   return (
     <BottomSheet open={open} onClose={onClose} height={574}>
       <h2 className="absolute left-6 top-[70px] text-[20px] font-bold leading-[1.2] text-black">
-        댓글 {comments.length}
+        댓글 {count}
       </h2>
 
       {/* 댓글 목록 (넘치면 스크롤) */}
