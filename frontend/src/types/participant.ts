@@ -1,4 +1,4 @@
 export interface Participant {
-  id: string
+  participantId: number
   nickname: string
 }

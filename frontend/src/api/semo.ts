@@ -1,6 +1,5 @@
-import type { CreateSemoRequest, SemoItem } from '../types/semo';
+import type { CreateSemoRequest } from '../types/semo';
 import { api } from './client';
-import { MOCK_SEMOS } from './mockSemos';
 
 export interface CreateSemoResponse {
   semoId: number;
@@ -17,14 +16,4 @@ export function createSemo(req: CreateSemoRequest, requestId: string) {
   form.append('requestId', requestId);
   if (req.coverImage) form.append('coverImage', req.coverImage);
   return api<CreateSemoResponse>('/api/semos', { method: 'POST', body: form });
-}
-
-export async function getSemo(semoId: string): Promise<SemoItem | null> {
-  await new Promise((resolve) => setTimeout(resolve, 200));
-  return MOCK_SEMOS.find((s) => s.id === semoId) ?? null;
-}
-
-// 임시: 초대 코드 = 세모 id (getInviteLink와 같이 교체)
-export async function getSemoByCode(code: string): Promise<SemoItem | null> {
-  return getSemo(code);
 }

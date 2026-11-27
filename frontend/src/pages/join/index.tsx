@@ -1,62 +1,36 @@
-import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { getParticipants, joinSemo } from '../../api/invite'
-import { getSemoByCode } from '../../api/semo'
+import { useRef, useState } from 'react'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
+import { ApiError, errorMessage } from '../../api/client'
+import { getInvitation, joinSemo } from '../../api/invite'
 import logoImg from '../../assets/icons/logo.svg'
 import Button from '../../components/common/Button'
 import Header from '../../components/common/Header'
 import Input from '../../components/common/Input'
+import StatusView from '../../components/common/StatusView'
 import Toast from '../../components/common/Toast'
 import CharCounter from '../../components/semo/CharCounter'
 import ParticipantList from '../../components/semo/ParticipantList'
+import { useApi } from '../../hooks/useApi'
 import { useToast } from '../../hooks/useToast'
 import MobileLayout from '../../layouts/MobileLayout'
-import type { Participant } from '../../types/participant'
-import type { SemoItem } from '../../types/semo'
-import { readNickname, saveNickname } from '../../utils/storage'
+import { semoPath } from '../../utils/routes'
 
 const NICKNAME_MAX = 10
 
-export default function JoinPage() {
-  const { code } = useParams<{ code: string }>()
+const hasCode = (error: unknown, code: string) => error instanceof ApiError && error.code === code
+
+function JoinView({ code }: { code: string }) {
   const navigate = useNavigate()
-  // undefined: 불러오는 중, null: 없는 초대 코드
-  const [semo, setSemo] = useState<SemoItem | null | undefined>(undefined)
-  const [participants, setParticipants] = useState<Participant[]>([])
-  const [nickname, setNickname] = useState(readNickname)
+  const { data: invitation, error, reload } = useApi(`invitation:${code}`, () => getInvitation(code))
+  // null: 아직 직접 입력하지 않음 → 추천 닉네임을 보여줌
+  const [typedNickname, setTypedNickname] = useState<string | null>(null)
+  const [nicknameError, setNicknameError] = useState<string>()
+  const [inviteMissing, setInviteMissing] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const submittingRef = useRef(false)
   const toast = useToast()
 
-  useEffect(() => {
-    if (!code) return
-    let active = true
-    getSemoByCode(code).then(async (found) => {
-      const list = found ? await getParticipants(found.id) : []
-      if (!active) return
-      setSemo(found)
-      setParticipants(list)
-    })
-    return () => {
-      active = false
-    }
-  }, [code])
-
-  const valid = nickname.trim() !== ''
-
-  const submit = async () => {
-    if (!code || !valid || submitting) return
-    setSubmitting(true)
-    try {
-      const joined = await joinSemo({ code, nickname: nickname.trim() })
-      saveNickname(nickname.trim())
-      navigate(`/semo/${joined.id}`)
-    } catch {
-      toast.show('참여하지 못했어요. 다시 시도해주세요.')
-      setSubmitting(false)
-    }
-  }
-
-  if (!code || semo === null) {
+  if (inviteMissing || hasCode(error, 'INVITE_NOT_FOUND')) {
     return (
       <MobileLayout>
         <Header variant="back" title="참여하기" />
@@ -70,6 +44,43 @@ export default function JoinPage() {
     )
   }
 
+  if (error || !invitation) {
+    return (
+      <MobileLayout>
+        <Header variant="back" title="참여하기" />
+        <StatusView error={error} onRetry={reload} />
+      </MobileLayout>
+    )
+  }
+
+  const detailPath = semoPath(String(invitation.semoId))
+  if (invitation.alreadyJoined) return <Navigate to={detailPath} replace />
+
+  const nickname = typedNickname ?? invitation.suggestedNickname ?? ''
+  const valid = nickname.trim() !== ''
+
+  const submit = async () => {
+    if (!valid || submittingRef.current) return
+    submittingRef.current = true
+    setSubmitting(true)
+    setNicknameError(undefined)
+    try {
+      const { semoId } = await joinSemo(code, nickname.trim())
+      navigate(semoPath(String(semoId)), { replace: true })
+      return
+    } catch (e) {
+      if (hasCode(e, 'ALREADY_JOINED')) {
+        navigate(detailPath, { replace: true })
+        return
+      }
+      if (hasCode(e, 'INVITE_NOT_FOUND')) setInviteMissing(true)
+      else if (hasCode(e, 'DUPLICATE_NICKNAME')) setNicknameError(errorMessage(e))
+      else toast.show(errorMessage(e))
+    }
+    submittingRef.current = false
+    setSubmitting(false)
+  }
+
   return (
     <MobileLayout>
       <Header variant="back" title="참여하기" />
@@ -77,13 +88,11 @@ export default function JoinPage() {
         <div className="mt-9 flex h-[335px] flex-col items-center rounded-[20px] bg-primary-disabled px-4 pt-[68px]">
           <img src={logoImg} alt="" className="h-[100px] w-[100px]" />
           <h2 className="mt-[30px] line-clamp-2 max-w-full break-words text-center text-[26px] font-bold leading-[31px] text-black">
-            {semo?.title}
+            {invitation.name}
           </h2>
-          {semo && (
-            <p className="mt-[13px] text-[14px] leading-[17px] text-primary-text">
-              {participants.length}명이 기다리고 있어요.
-            </p>
-          )}
+          <p className="mt-[13px] text-[14px] leading-[17px] text-primary-text">
+            {invitation.participantCount}명이 기다리고 있어요.
+          </p>
         </div>
 
         <div className="mt-10">
@@ -92,20 +101,35 @@ export default function JoinPage() {
             placeholder="예: 여진"
             maxLength={NICKNAME_MAX}
             value={nickname}
-            onChange={(e) => setNickname(e.target.value)}
+            onChange={(e) => {
+              setTypedNickname(e.target.value)
+              setNicknameError(undefined)
+            }}
+            error={nicknameError}
           />
-          <CharCounter length={nickname.length} max={NICKNAME_MAX} />
+          {!nicknameError && <CharCounter length={nickname.length} max={NICKNAME_MAX} />}
         </div>
 
-        <ParticipantList className="mt-[21px] pr-6" labelWeight="medium" participants={participants} />
+        <ParticipantList
+          className="mt-[21px] pr-6"
+          labelWeight="medium"
+          participants={invitation.participants}
+          participantCount={invitation.participantCount}
+        />
 
         <div className="mt-auto pt-8">
-          <Button disabled={!valid || !semo || submitting} onClick={submit}>
-            참여하기
+          <Button disabled={!valid || submitting} aria-busy={submitting} onClick={submit}>
+            {submitting ? '참여하는 중...' : '참여하기'}
           </Button>
         </div>
       </div>
       <Toast message={toast.message} />
     </MobileLayout>
   )
+}
+
+export default function JoinPage() {
+  const { code = '' } = useParams<{ code: string }>()
+  // 다른 초대 코드로 이동하면 입력과 에러 상태 초기화
+  return <JoinView key={code} code={code} />
 }
