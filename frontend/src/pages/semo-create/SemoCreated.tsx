@@ -4,11 +4,10 @@ import logoImg from '../../assets/icons/logo.svg'
 import Button from '../../components/common/Button'
 import Header from '../../components/common/Header'
 import MobileLayout from '../../layouts/MobileLayout'
-import type { SemoItem } from '../../types/semo'
 
-export default function SemoCreated({ semo }: { semo: SemoItem }) {
+export default function SemoCreated({ semoId }: { semoId: number }) {
   const navigate = useNavigate()
-  const goDetail = () => navigate(`/semo/${semo.id}`)
+  const goDetail = () => navigate(`/semo/${semoId}`)
   return (
     <MobileLayout>
       <Header
@@ -34,7 +33,7 @@ export default function SemoCreated({ semo }: { semo: SemoItem }) {
           친구들을 초대해 같은 순간을 모아보세요.
         </p>
         <div className="mt-auto flex w-full flex-col gap-[15px] pb-[50px]">
-          <Button onClick={() => navigate(`/invite/${semo.id}`)}>친구 초대하기</Button>
+          <Button onClick={() => navigate(`/invite/${semoId}`)}>친구 초대하기</Button>
           <Button variant="secondary" onClick={goDetail}>
             참여 중인 세모로 이동
           </Button>

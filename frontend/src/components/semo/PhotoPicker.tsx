@@ -27,10 +27,11 @@ export default function PhotoPicker({ label, previewUrl, onChange }: PhotoPicker
       <input
         ref={ref}
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png"
         hidden
         onChange={(e) => {
           const f = e.target.files?.[0]
+          e.target.value = ''
           if (f) onChange(f)
         }}
       />
