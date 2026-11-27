@@ -2,12 +2,14 @@ import type { Participant } from '../../types/participant'
 
 interface ParticipantListProps {
   participants: Participant[]
+  participantCount: number
   labelWeight?: 'bold' | 'medium'
   className?: string
 }
 
 export default function ParticipantList({
   participants,
+  participantCount,
   labelWeight = 'bold',
   className = '',
 }: ParticipantListProps) {
@@ -19,7 +21,7 @@ export default function ParticipantList({
         <ul className="flex min-w-0 flex-1 gap-3 overflow-x-auto">
           {participants.map((p) => (
             <li
-              key={p.id}
+              key={p.participantId}
               title={p.nickname}
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[20px] bg-primary-light text-[12px] font-bold text-primary-ink"
             >
@@ -27,7 +29,7 @@ export default function ParticipantList({
             </li>
           ))}
         </ul>
-        <span className="shrink-0 text-[12px] text-muted">{participants.length}명 참여 중</span>
+        <span className="shrink-0 text-[12px] text-muted">{participantCount}명 참여 중</span>
       </div>
     </section>
   )
